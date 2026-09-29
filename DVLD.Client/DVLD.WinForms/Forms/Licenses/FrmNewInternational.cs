@@ -46,7 +46,7 @@ namespace DVLD.WinForms.Forms.Licenses
 
         private async void ctrlFilterDriverLicense1_OnLicenseSelected(int obj)
         {
-            int _licenseId = obj;
+            _licenseId = obj;
             if (_licenseId == -1)
             {
                 MessageBox.Show($"Selected License isn't found", "Not Allowed", MessageBoxButtons.OK, MessageBoxIcon.Error);
