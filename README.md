@@ -179,21 +179,44 @@ People
 People ───────────────► Countries
 ```
 
-### Important relationship examples
+### ER Diagram
 
-- A `Person` can have a corresponding `User`.
-- A `Person` can become a `Driver`.
-- A `Person` can submit multiple `Application` records.
-- An `Application` belongs to an `ApplicationType`.
-- A local driving application is associated with a `LicenseClass`.
-- A local driving application can have multiple test appointments.
-- Each test appointment belongs to a specific `TestType`.
-- A test appointment can have test results.
-- A `Driver` can have multiple licenses.
-- A local license is associated with a `Driver`, `Application`, and `LicenseClass`.
-- An international license is associated with a `Driver`, an application, and the local license used to issue it.
-- A detained license references the license that was detained and can optionally reference the application used to release it.
-- User IDs are used throughout the system to track which user created or modified records.
+```mermaid
+erDiagram
+
+    People ||--o{ Users : "has"
+    People ||--o{ Driver : "can become"
+    Countries ||--o{ People : "nationality"
+
+    People ||--o{ Application : "submits"
+    Users ||--o{ Application : "creates"
+    ApplicationTypes ||--o{ Application : "defines"
+
+    Application ||--o| LocalDrivingLicense : "creates"
+    LicenseClass ||--o{ LocalDrivingLicense : "belongs to"
+
+    LocalDrivingLicense ||--o{ TestAppointment : "has"
+    TestType ||--o{ TestAppointment : "defines"
+    Users ||--o{ TestAppointment : "creates"
+    Application ||--o{ TestAppointment : "retake application"
+
+    TestAppointment ||--o{ Tests : "has"
+    Users ||--o{ Tests : "creates"
+
+    Driver ||--o{ Licenses : "owns"
+    Application ||--o{ Licenses : "supports"
+    LicenseClass ||--o{ Licenses : "classifies"
+    Users ||--o{ Licenses : "creates"
+
+    Licenses ||--o{ DetainedLicenses : "can be detained"
+    Users ||--o{ DetainedLicenses : "creates/releases"
+    Application ||--o{ DetainedLicenses : "release application"
+
+    Driver ||--o{ InternationalLicenses : "owns"
+    Application ||--o{ InternationalLicenses : "supports"
+    Licenses ||--o{ InternationalLicenses : "issued using"
+    Users ||--o{ InternationalLicenses : "creates"
+```
 
 ---
 
@@ -231,8 +254,6 @@ The system provides user-account management with:
 ### Password Security
 
 Passwords are **hashed using SHA-256** before being stored and compared.
-
-> SHA-256 is a cryptographic hashing algorithm, not an encryption algorithm. Passwords are therefore described as **hashed**, not encrypted.
 
 ---
 
@@ -751,23 +772,17 @@ Passwords should never be stored as plain text.
 
 This project hashes passwords using **SHA-256** before storing them in the database.
 
-For a production-grade authentication system, a password-specific hashing algorithm such as **Argon2id, bcrypt, or PBKDF2** with a unique salt and an appropriate work factor would generally be preferable to raw SHA-256.
-
 ---
 
 ## 📄 License
 
 This project is intended for educational and portfolio purposes.
 
-You may modify this section according to the license you choose for the repository.
-
 ---
 
 ## 👨‍💻 Author
 
 **Adham Gomaa**
-
-Computer Science Student | .NET Developer
 
 Technologies of interest:
 
@@ -778,4 +793,3 @@ Technologies of interest:
 - SQL Server
 - REST APIs
 - ADO.NET
-- Software Architecture
