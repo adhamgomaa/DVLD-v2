@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.LicenseClass;
 using DVLD.Shared.Entities;
 using Microsoft.AspNetCore.Http;
@@ -9,13 +9,13 @@ namespace DVLD.API.Controllers
 {
     [Route("api/LicenseClass")]
     [ApiController]
-    public class LicenseClassController : ControllerBase
+    public sealed class LicenseClassController(ILicenseClassService service) : ControllerBase
     {
         [HttpGet(Name = "GetAllLicenseClass")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<LicenseClassDto>>> GetAllLicenseClass()
+        public async Task<ActionResult<IEnumerable<LicenseClassDto>>> GetAllLicenseClass(CancellationToken cancellationToken)
         {
-            List<LicenseClass> license = await LicenseClassService.GetAllClassesAsync();
+            List<LicenseClass> license = await service.GetAllClassesAsync(cancellationToken);
             var classDto = license.Select(LicenseClassMapper.ToClassDto).ToList();
             return Ok(classDto);
         }
@@ -24,12 +24,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<LicenseClassDto>> GetLicenseClassById(int id)
+        public async Task<ActionResult<LicenseClassDto>> GetLicenseClassById(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            LicenseClass? license = await LicenseClassService.FindClassesAsync(id);
+            LicenseClass? license = await service.FindClassesAsync(id, cancellationToken);
 
             if (license == null) return NotFound($"There's no license class with this Id: {id}");
 
@@ -39,9 +39,9 @@ namespace DVLD.API.Controllers
         [HttpGet("by-classname/{name}", Name = "GetLicenseClassByClassName")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<LicenseClassDto>> GetLicenseClassByClassName(string name)
+        public async Task<ActionResult<LicenseClassDto>> GetLicenseClassByClassName(string name, CancellationToken cancellationToken)
         {
-            LicenseClass? license = await LicenseClassService.FindClassesAsync(name);
+            LicenseClass? license = await service.FindClassesAsync(name, cancellationToken);
 
             if (license == null) return NotFound($"There's no license class with this class name: {name}");
 

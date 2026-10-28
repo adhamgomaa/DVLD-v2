@@ -1,4 +1,5 @@
-﻿using DVLD.DTOs.Users;
+﻿using DVLD.DTOs.Auth;
+using DVLD.DTOs.Users;
 using DVLD.WinForms.Helpers;
 using DVLD.WinForms.Services;
 using Microsoft.Win32;
@@ -31,14 +32,30 @@ namespace DVLD.WinForms.Forms.Main
 
         private async Task CheckLogin()
         {
-            UserApiService service = new();
+            AuthApiService authService = new();
             LoginRequestDto requestDTO = new()
             {
                 UserName = txtUsername.Text,
                 Password = txtPass.Text
             };
 
-            LoginUserDto? loggedUser = await service.LoginAsync(requestDTO);
+            LoginResponseDto? tokens = await authService.LoginAsync(requestDTO);
+            LoginUserDto? loggedUser = null;
+            if (tokens is not null)
+            {
+                GetUserDto? user = await new UserApiService().GetUserByUsernameAsync(requestDTO.UserName);
+                if (user is not null)
+                {
+                    loggedUser = new LoginUserDto
+                    {
+                        UserId = user.UserId,
+                        PersonId = user.PersonId,
+                        UserName = user.UserName,
+                        IsActive = user.IsActive
+                    };
+                }
+            }
+
             if (loggedUser != null)
             {
                 if (loggedUser.IsActive)
@@ -63,6 +80,7 @@ namespace DVLD.WinForms.Forms.Main
             }
             else
             {
+                AuthSession.Clear();
                 MessageBox.Show("Invalid Username/Password", "Wrong Credintials", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

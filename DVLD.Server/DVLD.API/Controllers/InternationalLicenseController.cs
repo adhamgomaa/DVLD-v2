@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.InternationalLicense;
 using DVLD.Shared.Entities;
 using Microsoft.AspNetCore.Http;
@@ -10,22 +10,22 @@ namespace DVLD.API.Controllers
 {
     [Route("api/InternationalLicense")]
     [ApiController]
-    public class InternationalLicenseController : ControllerBase
+    public sealed class InternationalLicenseController(IInternationalLicenseService service) : ControllerBase
     {
         [HttpGet("by-driver-id/{driverId}", Name = "GetAllInternationalLicensesHistory")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<InternationalHistoryDto>>> GetAllInternationalLicensesHistory(int driverId)
+        public async Task<ActionResult<IEnumerable<InternationalHistoryDto>>> GetAllInternationalLicensesHistory(int driverId, CancellationToken cancellationToken)
         {
-            List<InternationalLicense> licenses = await InternationalLicenseService.GetInternationalLicensesHistoryAsync(driverId);
+            List<InternationalLicense> licenses = await service.GetInternationalLicensesHistoryAsync(driverId, cancellationToken);
             var licenseDto = licenses.Select(InternationalMapper.ToLicenseHistoryDto).ToList();
             return Ok(licenseDto);
         }
 
         [HttpGet(Name = "GetAllInternationalLicenses")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<InternationalLicenseDto>>> GetAllInternationalLicenses()
+        public async Task<ActionResult<IEnumerable<InternationalLicenseDto>>> GetAllInternationalLicenses(CancellationToken cancellationToken)
         {
-            List<InternationalLicense> licenses = await InternationalLicenseService.GetAllLicensesAsync();
+            List<InternationalLicense> licenses = await service.GetAllLicensesAsync(cancellationToken);
             var licenseDto = licenses.Select(InternationalMapper.ToLicenseDto).ToList();
             return Ok(licenseDto);
         }
@@ -34,12 +34,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<InternationalLicenseDto>> GetInternationalLicenseById(int internationalId)
+        public async Task<ActionResult<InternationalLicenseDto>> GetInternationalLicenseById(int internationalId, CancellationToken cancellationToken)
         {
             if (internationalId < 1)
                 return BadRequest("Invalid data");
 
-            InternationalLicense? license = await InternationalLicenseService.FindLicenseAsync(internationalId);
+            InternationalLicense? license = await service.FindLicenseAsync(internationalId, cancellationToken);
 
             if (license == null) return NotFound($"There's no license with this ID: {internationalId}");
 
@@ -50,12 +50,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<InternationalLicenseDto>> GetInternationalLicenseIdByLocalId(int localLicenseId)
+        public async Task<ActionResult<InternationalLicenseDto>> GetInternationalLicenseIdByLocalId(int localLicenseId, CancellationToken cancellationToken)
         {
             if (localLicenseId < 1)
                 return BadRequest("Invalid data");
 
-            InternationalLicense? license = await InternationalLicenseService.FindLicenseByLocalIdAsync(localLicenseId);
+            InternationalLicense? license = await service.FindLicenseByLocalIdAsync(localLicenseId, cancellationToken);
 
             if (license == null) return NotFound($"There's no license with this local license ID: {localLicenseId}");
 
@@ -65,9 +65,9 @@ namespace DVLD.API.Controllers
         [HttpGet("active-license-id-by-driver-id/{driverId}", Name = "GetActiveLicenseIdByDriverId")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<int>> GetActiveLicenseIdByDriverId(int driverId)
+        public async Task<ActionResult<int>> GetActiveLicenseIdByDriverId(int driverId, CancellationToken cancellationToken)
         {
-            int result = await InternationalLicenseService.GetActiveInternationalLicenseIdAsync(driverId);
+            int result = await service.GetActiveInternationalLicenseIdAsync(driverId, cancellationToken);
             if (result == -1)
                 return NotFound("There's no international license with this driverId");
 
@@ -78,11 +78,11 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<InternationalLicenseDto>> AddNewLicense(CreateInternationalLicenseDto createLicense)
+        public async Task<ActionResult<InternationalLicenseDto>> AddNewLicense(CreateInternationalLicenseDto createLicense, CancellationToken cancellationToken)
         {
             InternationalLicense newLicense = InternationalMapper.ToLicense(createLicense);
 
-            bool result = await InternationalLicenseService.AddNewLicenseAsync(newLicense);
+            bool result = await service.AddNewLicenseAsync(newLicense, cancellationToken);
             if (!result)
                 return StatusCode(500, new { message = "Error Adding License" });
 

@@ -1,14 +1,8 @@
-﻿using Microsoft.IdentityModel.Protocols;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace DVLD.DataAccess;
 
-namespace DVLD.DataAccess
+public sealed class DatabaseSettings(string connectionString)
 {
-    public static class DatabaseSettings
-    {
-        public static string ConnectionString { get; set; } = string.Empty;
-    }
+    public string ConnectionString { get; } = string.IsNullOrWhiteSpace(connectionString)
+        ? throw new ArgumentException("A database connection string is required.", nameof(connectionString))
+        : connectionString;
 }

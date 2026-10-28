@@ -16,7 +16,6 @@ namespace DVLD.WinForms.Forms.Users
     public partial class FrmChangePassword : Form
     {
         private int _userId = -1;
-        LoginUserDto currentUser = new();
         UserApiService _userService = new();
         public FrmChangePassword(int userId)
         {
@@ -27,18 +26,22 @@ namespace DVLD.WinForms.Forms.Users
         private async void FrmChangePassword_Load(object sender, EventArgs e)
         {
             await ctrlUserInfo1.LoadUserInfo(_userId);
-            currentUser = await _userService.GetUserByIdAsync(_userId) ?? new LoginUserDto();
         }
 
         private void Box_Validating(TextBox box, CancelEventArgs e)
         {
             if (box == txtCurrent)
             {
-                if (Encryption.Hashing(txtCurrent.Text) != currentUser.Password)
+                e.Cancel = string.IsNullOrWhiteSpace(box.Text);
+                errorProvider1.SetError(box, e.Cancel ? "Current password is required." : "");
+            }
+            else if (box == txtCPass)
+            {
+                if (txtCPass.Text != txtPass.Text)
                 {
                     e.Cancel = true;
                     box.Focus();
-                    errorProvider1.SetError(box, "Should you match with User password!!");
+                    errorProvider1.SetError(box, "Should you match with new password!!");
                 }
                 else
                 {
@@ -46,13 +49,13 @@ namespace DVLD.WinForms.Forms.Users
                     errorProvider1.SetError(box, "");
                 }
             }
-            if (box == txtCPass)
+            else if (box == txtPass)
             {
-                if (txtCPass.Text != txtPass.Text)
+                if (box.Text.Length < 8)
                 {
                     e.Cancel = true;
                     box.Focus();
-                    errorProvider1.SetError(box, "Should you match with new password!!");
+                    errorProvider1.SetError(box, "Password must contain at least 8 characters.");
                 }
                 else
                 {
@@ -71,20 +74,16 @@ namespace DVLD.WinForms.Forms.Users
         {
             if (!this.ValidateChildren())
             {
-                MessageBox.Show("Some fileds are not valide!, put the mouse over the red icon(s) to see the erro", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Some fields are not valid!, put the mouse over the red icon(s) to see the error", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            UpdateUserDto updateUser = new()
-            {
-                UserName = currentUser.UserName,
-                IsActive = currentUser.IsActive,
-                PersonId = currentUser.PersonId,
-                Password = txtCPass.Text
-            };
-            bool result = await _userService.UpdateUserAsync(_userId, updateUser);
+            bool result = await _userService.ChangePasswordAsync(
+                _userId,
+                txtCurrent.Text,
+                txtPass.Text);
             if (result)
             {
-                MessageBox.Show("Password Updated Successfuly!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Password Updated Successfully!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {

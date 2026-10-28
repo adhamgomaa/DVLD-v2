@@ -14,15 +14,6 @@ namespace DVLD.WinForms.Services
     {
         private readonly HttpClient _httpClient = ApiClient.httpClient;
 
-        public async Task<LoginUserDto?> LoginAsync(LoginRequestDto loginRequest)
-        {
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync(ApiRoutes.User.Login, loginRequest);
-            
-            if (!response.IsSuccessStatusCode)
-                return null;
-            return await response.Content.ReadFromJsonAsync<LoginUserDto>();
-        }
-
         public async Task<List<UserInfoDto>?> GetAllUserAsync()
         {
             HttpResponseMessage response = await _httpClient.GetAsync(ApiRoutes.User.GetAll);
@@ -47,7 +38,7 @@ namespace DVLD.WinForms.Services
             return await response.Content.ReadFromJsonAsync<GetUserDto>();
         }
         
-        public async Task<LoginUserDto?> GetUserByIdAsync(int id)
+        public async Task<GetUserDto?> GetUserByIdAsync(int id)
         {
             HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiRoutes.User.GetId, id));
             if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.BadRequest)
@@ -58,7 +49,7 @@ namespace DVLD.WinForms.Services
             if (!response.IsSuccessStatusCode)
                 throw new Exception(await response.Content.ReadAsStringAsync());
 
-            return await response.Content.ReadFromJsonAsync<LoginUserDto>();
+            return await response.Content.ReadFromJsonAsync<GetUserDto>();
         }
         public async Task<GetUserDto?> GetUserByUsernameAsync(string username)
         {
@@ -130,6 +121,24 @@ namespace DVLD.WinForms.Services
             {
                 return false;
             }
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> ChangePasswordAsync(
+            int id,
+            string currentPassword,
+            string newPassword,
+            CancellationToken cancellationToken = default)
+        {
+            HttpResponseMessage response = await _httpClient.PutAsJsonAsync(
+                string.Format(ApiRoutes.User.ChangePassword, id),
+                new ChangePasswordDto
+                {
+                    CurrentPassword = currentPassword,
+                    NewPassword = newPassword
+                },
+                cancellationToken);
 
             return response.IsSuccessStatusCode;
         }

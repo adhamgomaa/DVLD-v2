@@ -15,7 +15,7 @@ namespace DVLD.WinForms.Forms.Users
     public partial class FrmAddEditUsers : Form
     {
         private int _userId = -1;
-        LoginUserDto _user = new();
+        GetUserDto _user = new();
         UserApiService _userService = new();
         public FrmAddEditUsers()
         {
@@ -29,13 +29,13 @@ namespace DVLD.WinForms.Forms.Users
         }
         private async Task _LoadData()
         {
-            _user = await _userService.GetUserByIdAsync(_userId) ?? new LoginUserDto();
+            _user = await _userService.GetUserByIdAsync(_userId) ?? new GetUserDto();
             ctrlFilterPersonInfo1.FilterEnabled = false;
             await ctrlFilterPersonInfo1.LoadPersonInfo(_user.PersonId);
             lblUserID.Text = _userId.ToString();
             txtUsername.Text = _user.UserName;
-            txtPass.Text = _user.Password;
-            txtCPass.Text = _user.Password;
+            txtPass.Clear();
+            txtCPass.Clear();
             cbActive.Checked = _user.IsActive;
         }
 

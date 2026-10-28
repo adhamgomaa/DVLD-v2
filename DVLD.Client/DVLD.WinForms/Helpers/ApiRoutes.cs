@@ -8,6 +8,12 @@ namespace DVLD.WinForms.Helpers
 {
     public static class ApiRoutes
     {
+        public static class Auth
+        {
+            public const string Login = "Auth/login";
+            public const string Refresh = "Auth/refresh";
+            public const string Logout = "Auth/logout";
+        }
         public static class Application
         {
             public const string GetId = "Applications/{0}";
@@ -137,11 +143,11 @@ namespace DVLD.WinForms.Helpers
             public const string GetId = "Users/{0}";
             public const string GetInfo = "Users/info/{0}";
             public const string GetUsername = "Users/by-username/{0}";
-            public const string Login = "Users/login";
             public const string IsExist = "Users/{0}/exists";
             public const string IsExistByUsername = "Users/{0}/by-username/exists";
             public const string IsExistByPersonId = "Users/{0}/by-person-id/exists";
             public const string Update = "Users/{0}";
+            public const string ChangePassword = "Users/{0}/password";
             public const string Delete = "Users/{0}";
             public const string Add = "Users";
         }

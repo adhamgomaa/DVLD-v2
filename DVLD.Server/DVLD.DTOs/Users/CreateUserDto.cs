@@ -9,13 +9,12 @@ namespace DVLD.DTOs.Users
 {
     public class CreateUserDto
     {
-        [Required]
+        [Range(1, int.MaxValue)]
         public int PersonId { get; set; }
-        [Required]
+        [Required, MinLength(3), MaxLength(100)]
         public string UserName { get; set; }
-        [Required]
+        [Required, MinLength(8), MaxLength(128)]
         public string Password { get; set; }
-        [Required]
         public bool IsActive { get; set; }
 
         public CreateUserDto()

@@ -8,9 +8,25 @@ namespace DVLD.WinForms.Helpers
 {
     public static class ApiClient
     {
-        public static readonly HttpClient httpClient = new()
+        public static readonly HttpClient httpClient;
+        public static readonly HttpClient AuthClient;
+
+        static ApiClient()
         {
-            BaseAddress = new Uri(AppConfiguration.BaseApiUrl)
-        };
+            httpClient = new HttpClient(new BearerTokenHandler
+            {
+                InnerHandler = new HttpClientHandler()
+            })
+            {
+                BaseAddress = new Uri(AppConfiguration.BaseApiUrl),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            AuthClient = new HttpClient(new HttpClientHandler())
+            {
+                BaseAddress = new Uri(AppConfiguration.BaseApiUrl),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+        }
     }
 }
