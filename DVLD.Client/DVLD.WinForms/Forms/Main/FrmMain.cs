@@ -21,7 +21,7 @@ namespace DVLD.WinForms.Forms.Main
 {
     public partial class FrmMain : Form
     {
-        LoginUserDto currentUser = CurrentUser.User!;
+        GetUserDto currentUser = CurrentUser.User!;
         public bool Logout { get; set; } = false;
         public FrmMain()
         {

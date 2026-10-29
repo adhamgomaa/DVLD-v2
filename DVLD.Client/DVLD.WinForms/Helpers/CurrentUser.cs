@@ -9,6 +9,6 @@ namespace DVLD.WinForms.Helpers
 {
     public static class CurrentUser
     {
-        public static LoginUserDto? User { get; set; }
+        public static GetUserDto? User { get; set; }
     }
 }

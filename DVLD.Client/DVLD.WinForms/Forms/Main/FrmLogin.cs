@@ -40,13 +40,13 @@ namespace DVLD.WinForms.Forms.Main
             };
 
             LoginResponseDto? tokens = await authService.LoginAsync(requestDTO);
-            LoginUserDto? loggedUser = null;
+            GetUserDto? loggedUser = null;
             if (tokens is not null)
             {
                 GetUserDto? user = await new UserApiService().GetUserByUsernameAsync(requestDTO.UserName);
                 if (user is not null)
                 {
-                    loggedUser = new LoginUserDto
+                    loggedUser = new GetUserDto
                     {
                         UserId = user.UserId,
                         PersonId = user.PersonId,
