@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.Tests;
 using DVLD.Shared.Entities;
 using DVLD.Shared.Enums;
@@ -11,18 +11,18 @@ namespace DVLD.API.Controllers
 {
     [Route("api/Tests")]
     [ApiController]
-    public class TestsController : ControllerBase
+    public sealed class TestsController(ITestService service) : ControllerBase
     {
         [HttpGet("{id}", Name = "GetTestById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TestDto>> GetTestById(int id)
+        public async Task<ActionResult<TestDto>> GetTestById(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            Test? test = await TestService.FindTestAsync(id);
+            Test? test = await service.FindTestAsync(id, cancellationToken);
 
             if (test == null) return NotFound($"There's no test with this Id: {id}");
 
@@ -33,9 +33,9 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TestDto>> GetLastTest(int localId, TestTypeEnum testTypeId)
+        public async Task<ActionResult<TestDto>> GetLastTest(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
-            Test? test = await TestService.GetLastTestAsync(localId, testTypeId);
+            Test? test = await service.GetLastTestAsync(localId, testTypeId, cancellationToken);
 
             if (test == null) return NotFound($"There's no tests");
 
@@ -46,11 +46,11 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TestDto>> AddNewApp(CreateTestDto createTest)
+        public async Task<ActionResult<TestDto>> AddNewApp(CreateTestDto createTest, CancellationToken cancellationToken)
         {
             Test newTest = TestMapper.ToTest(createTest);
 
-            bool result = await TestService.AddNewTestAsync(newTest);
+            bool result = await service.AddNewTestAsync(newTest, cancellationToken);
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Test" });
 
@@ -62,12 +62,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UpdateTestDto>> UpdateApp(int id, UpdateTestDto updateTest)
+        public async Task<ActionResult<UpdateTestDto>> UpdateApp(int id, UpdateTestDto updateTest, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            Test? test = await TestService.FindTestAsync(id);
+            Test? test = await service.FindTestAsync(id, cancellationToken);
             if (test == null) return NotFound($"There's no test with this Id: {id}");
 
             test.AppointmentID = updateTest.AppointmentID;
@@ -75,7 +75,7 @@ namespace DVLD.API.Controllers
             test.Notes = updateTest.Notes;
             test.UserId = updateTest.UserId;
            
-            bool result = await TestService.UpdateTestAsync(test);
+            bool result = await service.UpdateTestAsync(test, cancellationToken);
             if (result) return Ok(updateTest);
             else return StatusCode(500, new { message = "Error Updating Test" });
         }

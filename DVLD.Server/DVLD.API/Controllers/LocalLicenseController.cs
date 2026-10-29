@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.LocalLicense;
 using DVLD.Shared.Entities;
 using DVLD.Shared.Enums;
@@ -10,13 +10,13 @@ namespace DVLD.API.Controllers
 {
     [Route("api/LocalLicense")]
     [ApiController]
-    public class LocalLicenseController : ControllerBase
+    public sealed class LocalLicenseController(ILocalDrivingLicenseService service) : ControllerBase
     {
         [HttpGet(Name = "GetAllLocalLicenses")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<LocalLicenseDto>>> GetAllLocalLicenses()
+        public async Task<ActionResult<IEnumerable<LocalLicenseDto>>> GetAllLocalLicenses(CancellationToken cancellationToken)
         {
-            List<LocalDrivingApplications> licenses = await LocalDrivingLicenseService.GetAllLocalLicensesAsync();
+            List<LocalDrivingApplications> licenses = await service.GetAllLocalLicensesAsync(cancellationToken);
             var licenseDto = licenses.Select(LocalLicenseMapper.ToLocalDto).ToList();
             return Ok(licenseDto);
         }
@@ -24,12 +24,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<GetLocalLicenseDto>> GetLocalLicenseById(int id)
+        public async Task<ActionResult<GetLocalLicenseDto>> GetLocalLicenseById(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            LocalLicense? license = await LocalDrivingLicenseService.FindLocalLicenseAsync(id);
+            LocalLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
 
             if (license == null) return NotFound($"There's no license with this Id: {id}");
 
@@ -39,12 +39,12 @@ namespace DVLD.API.Controllers
         [HttpGet("cancel/{localId}", Name = "CancelLicense")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> CancelLicense(int localId)
+        public async Task<ActionResult<bool>> CancelLicense(int localId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await LocalDrivingLicenseService.CancelLicenseAsync(localId);
+            bool result = await service.CancelLicenseAsync(localId, cancellationToken);
 
             return Ok(result);
         }
@@ -52,12 +52,12 @@ namespace DVLD.API.Controllers
         [HttpGet("check-same-class/by-person-id/{personId}/by-class-id/{classId}", Name = "CheckPersonHasSameClass")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> CheckPersonHasSameClass(int personId, int classId)
+        public async Task<ActionResult<bool>> CheckPersonHasSameClass(int personId, int classId, CancellationToken cancellationToken)
         {
             if (personId < 1 || classId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await LocalDrivingLicenseService.CheckPersonHasSameClassAsync(personId, classId);
+            bool result = await service.CheckPersonHasSameClassAsync(personId, classId, cancellationToken);
 
             return Ok(result);
         }
@@ -65,12 +65,12 @@ namespace DVLD.API.Controllers
         [HttpGet("passed-test-count/{localId}", Name = "GetPassedTestCount")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<byte>> GetPassedTestCount(int localId)
+        public async Task<ActionResult<byte>> GetPassedTestCount(int localId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            byte result = await LocalDrivingLicenseService.GetPassedTestCountAsync(localId);
+            byte result = await service.GetPassedTestCountAsync(localId, cancellationToken);
 
             return Ok(result);
         }
@@ -78,12 +78,12 @@ namespace DVLD.API.Controllers
         [HttpGet("total-trails-per-test/{localId}/{testTypeId}", Name = "GetTotalTrailsPerTest")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<byte>> GetTotalTrailsPerTest(int localId, TestTypeEnum testTypeId)
+        public async Task<ActionResult<byte>> GetTotalTrailsPerTest(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            byte result = await LocalDrivingLicenseService.GetTotalTrailsPerTestAsync(localId, testTypeId);
+            byte result = await service.GetTotalTrailsPerTestAsync(localId, testTypeId, cancellationToken);
 
             return Ok(result);
         }
@@ -91,12 +91,12 @@ namespace DVLD.API.Controllers
         [HttpGet("dose-attend-test-type/{localId}/{testTypeId}", Name = "DoseAttendTestType")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> DoseAttendTestType(int localId, TestTypeEnum testTypeId)
+        public async Task<ActionResult<bool>> DoseAttendTestType(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await LocalDrivingLicenseService.DoseAttendTestTypeAsync(localId, testTypeId);
+            bool result = await service.DoseAttendTestTypeAsync(localId, testTypeId, cancellationToken);
 
             return Ok(result);
         }
@@ -104,12 +104,12 @@ namespace DVLD.API.Controllers
         [HttpGet("dose-pass-test-type/{localId}/{testTypeId}", Name = "DosePassTestType")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> DosePassTestType(int localId, TestTypeEnum testTypeId)
+        public async Task<ActionResult<bool>> DosePassTestType(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await LocalDrivingLicenseService.DosePassTestTypeAsync(localId, testTypeId);
+            bool result = await service.DosePassTestTypeAsync(localId, testTypeId, cancellationToken);
 
             return Ok(result);
         }
@@ -117,12 +117,12 @@ namespace DVLD.API.Controllers
         [HttpGet("is-there-an-active-test/{localId}/{testTypeId}", Name = "IsThereAnActiveTest")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> IsThereAnActiveTest(int localId, TestTypeEnum testTypeId)
+        public async Task<ActionResult<bool>> IsThereAnActiveTest(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await LocalDrivingLicenseService.IsThereAnActiveTestAsync(localId, testTypeId);
+            bool result = await service.IsThereAnActiveTestAsync(localId, testTypeId, cancellationToken);
 
             return Ok(result);
         }
@@ -131,19 +131,19 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<GetLocalLicenseDto>> AddNewLocalLicense(CreateLocalLicenseDto createLicense)
+        public async Task<ActionResult<GetLocalLicenseDto>> AddNewLocalLicense(CreateLocalLicenseDto createLicense, CancellationToken cancellationToken)
         {
             LocalLicense newLicense = LocalLicenseMapper.ToLicense(createLicense);
 
-            bool check = await LocalDrivingLicenseService.CheckPersonHasSameClassAsync(newLicense.PersonId, newLicense.ClassId);
+            bool check = await service.CheckPersonHasSameClassAsync(newLicense.PersonId, newLicense.ClassId, cancellationToken);
             if (check)
                 return StatusCode(500, new { message = "This person has the same class, please choose another class" });
 
-            bool result = await LocalDrivingLicenseService.AddNewLocalAsync(newLicense);
+            bool result = await service.AddNewLocalAsync(newLicense, cancellationToken);
             if (!result)
                 return StatusCode(500, new { message = "Error Adding License" });
 
-            LocalLicense? license = await LocalDrivingLicenseService.FindLocalLicenseAsync(newLicense.LocalId);
+            LocalLicense? license = await service.FindLocalLicenseAsync(newLicense.LocalId, cancellationToken);
 
             return CreatedAtRoute("GetLocalLicenseById", new { id = newLicense.LocalId }, LocalLicenseMapper.ToGetDto(license!));
         }
@@ -153,12 +153,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UpdateLocalLicenseDto>> UpdateLocalLicense(int id, UpdateLocalLicenseDto updateLicense)
+        public async Task<ActionResult<UpdateLocalLicenseDto>> UpdateLocalLicense(int id, UpdateLocalLicenseDto updateLicense, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            LocalLicense? license = await LocalDrivingLicenseService.FindLocalLicenseAsync(id);
+            LocalLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
             if (license == null) return NotFound($"There's no license with this Id: {id}");
 
             license.PersonId = updateLicense.PersonId;
@@ -169,11 +169,11 @@ namespace DVLD.API.Controllers
             license.UserId = updateLicense.UserId;
             license.ClassId = updateLicense.ClassId;
 
-            bool check = await LocalDrivingLicenseService.CheckPersonHasSameClassAsync(license.PersonId, license.ClassId);
+            bool check = await service.CheckPersonHasSameClassAsync(license.PersonId, license.ClassId, cancellationToken);
             if (check)
                return StatusCode(500, new { message = "This person has the same class, please choose another class" });
 
-            bool result = await LocalDrivingLicenseService.UpdateLocalAsync(license);
+            bool result = await service.UpdateLocalAsync(license, cancellationToken);
             if (result) return Ok(updateLicense);
             else return StatusCode(500, new { message = "Error Updating License" });
         }
@@ -183,11 +183,11 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> DeleteLocalLicense(int localId, int appId)
+        public async Task<ActionResult> DeleteLocalLicense(int localId, int appId, CancellationToken cancellationToken)
         {
             if (localId < 1 || appId < 1)
                 return BadRequest("Invalid data");
-            bool result = await LocalDrivingLicenseService.DeleteAsync(localId, appId);
+            bool result = await service.DeleteAsync(localId, appId, cancellationToken);
             return result ? Ok($"Local License With ID {localId} has been deleted") : StatusCode(500, new { message = "Error Deleting License" });
         }
     }

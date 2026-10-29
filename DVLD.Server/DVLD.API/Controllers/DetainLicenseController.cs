@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.DetainLicense;
 using DVLD.Shared.Entities;
 using Microsoft.AspNetCore.Http;
@@ -10,13 +10,13 @@ namespace DVLD.API.Controllers
 {
     [Route("api/DetainLicense")]
     [ApiController]
-    public class DetainLicenseController : ControllerBase
+    public sealed class DetainLicenseController(IDetainLicenseService service) : ControllerBase
     {
         [HttpGet(Name = "GetAllDetainLicenses")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<DetainLicenseDto>>> GetAllDetainLicenses()
+        public async Task<ActionResult<IEnumerable<DetainLicenseDto>>> GetAllDetainLicenses(CancellationToken cancellationToken)
         {
-            List<DetainLicenseInfo> licenses = await DetainLicenseService.GetDetainedLicensesAsync();
+            List<DetainLicenseInfo> licenses = await service.GetDetainedLicensesAsync(cancellationToken);
             var licenseDto = licenses.Select(DetainLicenseMapper.ToLicenseDto).ToList();
             return Ok(licenseDto);
         }
@@ -24,12 +24,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<GetDetainDto>> GetDetainLicenseById(int licenseId)
+        public async Task<ActionResult<GetDetainDto>> GetDetainLicenseById(int licenseId, CancellationToken cancellationToken)
         {
             if (licenseId < 1)
                 return BadRequest("Invalid data");
 
-            DetainLicense? license = await DetainLicenseService.FindDetainLicenseAsync(licenseId);
+            DetainLicense? license = await service.FindDetainLicenseAsync(licenseId, cancellationToken);
 
             if (license == null) return NotFound($"There's no detain license with this license ID: {licenseId}");
 
@@ -39,12 +39,12 @@ namespace DVLD.API.Controllers
         [HttpGet("is-license-detained/{licenseId}", Name = "IsLicenseDetained")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> IsLicenseDetained(int licenseId)
+        public async Task<ActionResult<bool>> IsLicenseDetained(int licenseId, CancellationToken cancellationToken)
         {
             if (licenseId < 1)
                 return BadRequest("Invalid data");
 
-            bool result = await DetainLicenseService.IsDetainedLicenseAsync(licenseId);
+            bool result = await service.IsDetainedLicenseAsync(licenseId, cancellationToken);
 
             return Ok(result);
         }
@@ -53,11 +53,11 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<GetDetainDto>> AddNewDetainLicense(CreateDetainLicenseDto createLicense)
+        public async Task<ActionResult<GetDetainDto>> AddNewDetainLicense(CreateDetainLicenseDto createLicense, CancellationToken cancellationToken)
         {
             DetainLicense newDetain = DetainLicenseMapper.ToLicense(createLicense);
 
-            bool result = await DetainLicenseService.AddNewDetainLicenseAsync(newDetain);
+            bool result = await service.AddNewDetainLicenseAsync(newDetain, cancellationToken);
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Detain License" });
 
@@ -69,12 +69,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UpdateDetainLicenseDto>> UpdateDetainLicense(int licenseId, UpdateDetainLicenseDto updateLicense)
+        public async Task<ActionResult<UpdateDetainLicenseDto>> UpdateDetainLicense(int licenseId, UpdateDetainLicenseDto updateLicense, CancellationToken cancellationToken)
         {
             if (licenseId < 1)
                 return BadRequest("Invalid data");
 
-            DetainLicense? license = await DetainLicenseService.FindDetainLicenseAsync(licenseId);
+            DetainLicense? license = await service.FindDetainLicenseAsync(licenseId, cancellationToken);
             if (license == null) return NotFound($"There's no detain license with this license ID: {licenseId}");
 
             license.LicenseID = updateLicense.LicenseID;
@@ -82,7 +82,7 @@ namespace DVLD.API.Controllers
             license.Fees = updateLicense.Fees;
             license.UserID = updateLicense.UserID;
 
-            bool result = await DetainLicenseService.UpdateDetainLicenseAsync(license);
+            bool result = await service.UpdateDetainLicenseAsync(license, cancellationToken);
             if (result) return Ok(updateLicense);
             else return StatusCode(500, new { message = "Error Updating Detain License" });
         }
@@ -92,12 +92,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ReleaseLicenseDto>> ReleaseDetainedLicense(int licenseId, ReleaseLicenseDto releaseLicense)
+        public async Task<ActionResult<ReleaseLicenseDto>> ReleaseDetainedLicense(int licenseId, ReleaseLicenseDto releaseLicense, CancellationToken cancellationToken)
         {
             if (licenseId < 1)
                 return BadRequest("Invalid data");
 
-            DetainLicense? license = await DetainLicenseService.FindDetainLicenseAsync(licenseId);
+            DetainLicense? license = await service.FindDetainLicenseAsync(licenseId, cancellationToken);
             if (license == null) return NotFound($"There's no detain license with this license ID: {licenseId}");
 
             license.PersonId = releaseLicense.PersonId;
@@ -107,7 +107,7 @@ namespace DVLD.API.Controllers
             license.Fees = releaseLicense.Fees;
             license.ReleaseByUserId = releaseLicense.ReleaseByUserId;
 
-            bool result = await DetainLicenseService.ReleaseDetainedLicenseAsync(license);
+            bool result = await service.ReleaseDetainedLicenseAsync(license, cancellationToken);
             if (result) return Ok(releaseLicense);
             else return StatusCode(500, new { message = "Error Updating Release License" });
         }

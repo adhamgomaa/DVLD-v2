@@ -1,4 +1,5 @@
 ﻿using DVLD.WinForms.Helpers;
+using DVLD.WinForms.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,8 +28,17 @@ namespace DVLD.WinForms.Forms.Main
             InitializeComponent();
         }
 
-        private void signOutToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void signOutToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            try
+            {
+                await new AuthApiService().LogoutAsync();
+            }
+            catch (HttpRequestException)
+            {
+                AuthSession.Clear();
+            }
+
             CurrentUser.User = null;
             Logout = true;
             this.Close();

@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.Countries;
 using DVLD.Shared.Entities;
 using Microsoft.AspNetCore.Http;
@@ -9,13 +9,13 @@ namespace DVLD.API.Controllers
 {
     [Route("api/Countries")]
     [ApiController]
-    public class CountriesController : ControllerBase
+    public sealed class CountriesController(ICountryService service) : ControllerBase
     {
         [HttpGet(Name = "GetAllCountries")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<CountriesDto>>> GetAllCountries()
+        public async Task<ActionResult<IEnumerable<CountriesDto>>> GetAllCountries(CancellationToken cancellationToken)
         {
-            List<Country> countries = await CountryService.GetCountriesAsync();
+            List<Country> countries = await service.GetCountriesAsync(cancellationToken);
             var CountryDto = countries.Select(CountryMapper.ToCountriesDto).ToList();
             return Ok(CountryDto);
         }
@@ -24,12 +24,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<CountriesDto>> GetCountryById(int id)
+        public async Task<ActionResult<CountriesDto>> GetCountryById(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            Country? country = await CountryService.FindCountryAsync(id);
+            Country? country = await service.FindCountryAsync(id, cancellationToken);
 
             if (country == null) return NotFound($"There's no country with this Id: {id}");
 
@@ -39,9 +39,9 @@ namespace DVLD.API.Controllers
         [HttpGet("by-name/{name}", Name = "GetCountryByName")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<CountriesDto>> GetCountryByName(string name)
+        public async Task<ActionResult<CountriesDto>> GetCountryByName(string name, CancellationToken cancellationToken)
         {
-            Country? country = await CountryService.FindCountryAsync(name);
+            Country? country = await service.FindCountryAsync(name, cancellationToken);
 
             if (country == null) return NotFound($"There's no country with this name: {name}");
 

@@ -1,5 +1,5 @@
-﻿using DVLD.API.Mappers;
-using DVLD.Business;
+using DVLD.Business.Interfaces;
+using DVLD.API.Mappers;
 using DVLD.DTOs.Applications;
 using DVLD.Shared.Entities;
 using Microsoft.AspNetCore.Http;
@@ -9,18 +9,18 @@ namespace DVLD.API.Controllers
 {
     [Route("api/Applications")]
     [ApiController]
-    public class ApplicationsController : ControllerBase
+    public sealed class ApplicationsController(IApplicationService service) : ControllerBase
     {
         [HttpGet("{id}", Name = "GetApplicationById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<GetAppDto>> GetApplicationById(int id)
+        public async Task<ActionResult<GetAppDto>> GetApplicationById(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            Application? app = await ApplicationService.FindAppAsync(id);
+            Application? app = await service.FindAppAsync(id, cancellationToken);
 
             if (app == null) return NotFound($"There's no application with this Id: {id}");
 
@@ -30,11 +30,11 @@ namespace DVLD.API.Controllers
         [HttpPost(Name = "AddNewApp")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<GetAppDto>> AddNewApp(CreateAppDto createApp)
+        public async Task<ActionResult<GetAppDto>> AddNewApp(CreateAppDto createApp, CancellationToken cancellationToken)
         {
             Application newApp = ApplicationMapper.ToApp(createApp);
 
-            bool result = await ApplicationService.AddNewAppAsync(newApp);
+            bool result = await service.AddNewAppAsync(newApp, cancellationToken);
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Application" });
 
@@ -46,12 +46,12 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UpdateAppDto>> UpdateApp(int id, UpdateAppDto updateApp)
+        public async Task<ActionResult<UpdateAppDto>> UpdateApp(int id, UpdateAppDto updateApp, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            Application? app = await ApplicationService.FindAppAsync(id);
+            Application? app = await service.FindAppAsync(id, cancellationToken);
             if (app == null) return NotFound($"There's no application with this Id: {id}");
 
             app.PersonId = updateApp.PersonId;
@@ -61,7 +61,7 @@ namespace DVLD.API.Controllers
             app.Fees = updateApp.Fees;
             app.UserId = updateApp.UserId;
 
-            bool result = await ApplicationService.UpdateAppAsync(app);
+            bool result = await service.UpdateAppAsync(app, cancellationToken);
             if (result) return Ok(updateApp);
             else return StatusCode(500, new { message = "Error Updating Application" });
         }
@@ -70,11 +70,11 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> DeleteApp(int id)
+        public async Task<ActionResult> DeleteApp(int id, CancellationToken cancellationToken)
         {
             if (id < 1)
                 return BadRequest("Invalid data");
-            bool result = await ApplicationService.DeleteAppAsync(id);
+            bool result = await service.DeleteAppAsync(id, cancellationToken);
             return result ? Ok($"Application With ID {id} has been deleted") : StatusCode(500, new { message = "Error Deleting Application" });
         }
     }
