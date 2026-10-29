@@ -1,8 +1,8 @@
 # DVLD - Driving & Vehicle License Department System
 
-A full-stack **Driving & Vehicle License Department (DVLD)** management system built with a **desktop client** and a **RESTful ASP.NET Core Web API**. The system manages people, users, applications, driving tests, local and international licenses, detained licenses, and the complete workflow required to issue and manage driving licenses.
+A full-stack **Driving & Vehicle License Department (DVLD)** management system built with a **Windows Forms desktop client** and a **RESTful ASP.NET Core Web API**. The system manages people, users, applications, driving tests, local and international licenses, detained licenses, and the complete workflow required to issue and manage driving licenses.
 
-The project was designed with a clear separation between the presentation, business, data-access, and API layers, with SQL Server handling persistent data and business operations through stored procedures.
+The project was designed with a clear separation between the presentation, business, data-access, and API layers, with SQL Server handling persistent data and business operations through stored procedures. The API is secured with JWT bearer authentication, refresh-token rotation, authorization, HTTPS, and rate limiting.
 
 ---
 
@@ -75,6 +75,10 @@ The project follows a layered architecture with a desktop client communicating w
 - SQL Server stored procedures
 - Database transactions
 - Centralized API client communication
+- JWT bearer authentication
+- Refresh-token rotation
+- API authorization and rate limiting
+- Swagger/OpenAPI security definitions
 
 ---
 
@@ -90,6 +94,8 @@ The WinForms application communicates with the server through the ASP.NET Core W
 - Collect and validate user input.
 - Communicate with API endpoints using `HttpClient`.
 - Work with DTOs returned by the API.
+- Authenticate through the API and attach bearer access tokens to protected requests.
+- Refresh expired access tokens without interrupting the user workflow.
 - Display people, users, drivers, applications, tests, and licenses.
 - Handle searching and filtering.
 - Provide forms for creating and updating records.
@@ -110,6 +116,8 @@ It acts as the central entry point between the desktop client and the database.
 - Apply business rules.
 - Convert between entities and DTOs.
 - Handle authentication-related operations.
+- Issue, rotate, revoke, and validate access and refresh tokens.
+- Apply authorization policies and rate limits to API requests.
 - Communicate with the Data Access Layer.
 - Return appropriate HTTP responses.
 - Centralize database access behind the API.
@@ -140,6 +148,8 @@ The database is organized around the main entities of a driving-license departme
 | `TestAppointment` | Stores scheduled driving-test appointments. |
 | `Tests` | Stores the actual test results. |
 | `DetainedLicenses` | Stores detained licenses and their release information. |
+| `RefreshTokens` | Stores hashed refresh tokens, expiry, rotation, and revocation data. |
+| `LoginAttempts` | Records login attempts used for authentication monitoring and throttling. |
 
 The database schema contains primary keys, foreign keys, unique constraints, default values, views, stored procedures, and transactional operations.
 
@@ -247,13 +257,44 @@ The system provides user-account management with:
 - Unique usernames
 - Active/inactive user status
 - User-to-person relationship
-- Login using username and password
+- Login using username and password through `POST /api/Auth/login`
 - User-related database operations
-- Password hashing
+- Password hashing with BCrypt
+- JWT access tokens for protected API requests
+- Refresh tokens for renewing authenticated sessions
+- Logout and refresh-token revocation
+
+### JWT Authentication Flow
+
+The client uses separate HTTP clients for authentication and protected API calls. The protected client adds the current bearer token to each request. When an API request returns `401 Unauthorized`, the client attempts a synchronized refresh and retries the request once.
+
+```text
+Login
+  ↓
+Access token + refresh token
+  ↓
+Bearer token on protected API requests
+  ↓
+Access token expires
+  ↓
+Rotate refresh token
+  ↓
+Retry the original request
+```
+
+The API exposes the following authentication endpoints:
+
+| Endpoint | Purpose | Authentication |
+|---|---|---|
+| `POST /api/Auth/login` | Validate credentials and issue access/refresh tokens. | Anonymous |
+| `POST /api/Auth/refresh` | Rotate a valid refresh token and issue new tokens. | Anonymous |
+| `POST /api/Auth/logout` | Revoke the supplied refresh token. | Anonymous |
+
+All other controller actions require a valid JWT by default. Login, refresh, and logout are explicitly anonymous and protected by dedicated fixed-window rate-limit policies. Swagger documents the Bearer token security scheme for authorized operations.
 
 ### Password Security
 
-Passwords are **hashed using SHA-256** before being stored and compared.
+Passwords are hashed with **BCrypt** before being stored and verified. Plain-text passwords are not used for database comparisons.
 
 ---
 
@@ -494,6 +535,7 @@ Examples include:
 - Counting test attempts.
 - Checking passed tests.
 - Detaining and releasing licenses.
+- Managing login attempts and refresh-token lifecycle data.
 - Updating and deactivating licenses.
 
 Stored procedures also use:
@@ -519,6 +561,7 @@ Examples include:
 - Creating an international license.
 - Releasing a detained license.
 - Recording a test and locking its appointment.
+- Rotating and revoking refresh tokens.
 - Updating related application/license information.
 
 For example:
@@ -576,10 +619,12 @@ This prevents partially completed operations from leaving the database in an inc
 
 ### Security
 
-- SHA-256 password hashing
-- Authentication
+- BCrypt password hashing
+- JWT bearer authentication
+- Refresh-token rotation and revocation
 - Active/inactive user accounts
 - Parameterized database commands
+- Login, refresh, logout, and global API rate limiting
 
 ---
 
@@ -599,7 +644,7 @@ DVLD
 │
 ├── DVLD.API
 │   ├── Controllers
-│   └── API Configuration
+│   └── Configuration
 │
 ├── DVLD.Business
 │   └── Business Services
@@ -616,8 +661,6 @@ DVLD
 └── Database
     └── database.sql
 ```
-
-> The exact project/folder names may differ depending on the repository organization, but the architecture follows the same separation of responsibilities.
 
 ---
 
@@ -650,7 +693,7 @@ The script creates:
 
 ### 3. Configure the API
 
-Update the API connection string in the server configuration.
+Update the API connection string in the server configuration and provide a JWT signing key through user secrets or an environment variable. The signing key must contain at least 32 UTF-8 bytes and should not be committed to source control.
 
 Example:
 
@@ -658,13 +701,37 @@ Example:
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=YOUR_SERVER;Database=DVLD;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Issuer": "DVLD.API",
+    "Audience": "DVLD.Client",
+    "AccessTokenMinutes": 30,
+    "RefreshTokenDays": 7
   }
 }
 ```
 
+Set the signing key with an environment variable, for example:
+
+```bash
+export Jwt__SigningKey="replace-with-a-random-secret-at-least-32-bytes-long"
+```
+
+The API fails fast when the connection string or JWT signing key is missing or invalid.
+
 ### 4. Configure the WinForms client
 
-Update the API base URL in the client configuration so that the desktop application can communicate with the running ASP.NET Core API.
+Update the API base URL in [`DVLD.Client/DVLD.WinForms/appsettings.json`](DVLD.Client/DVLD.WinForms/appsettings.json) so that the desktop application can communicate with the running ASP.NET Core API:
+
+```json
+{
+  "ApiSettings": {
+    "BaseUrl": "https://localhost:7296/api/"
+  }
+}
+```
+
+The client starts at the login screen, stores tokens only for the current application session, refreshes expired access tokens, and clears the session on logout or failed token refresh.
 
 ### 5. Run the API
 
@@ -681,7 +748,9 @@ Start the desktop client after the API is running.
 - 👤 People Management
 - 👨‍💼 User Management
 - 🔐 Authentication
-- 🔑 SHA-256 Password Hashing
+- 🔑 BCrypt Password Hashing
+- 🎫 JWT Access and Refresh Tokens
+- 🔄 Automatic Access-Token Refresh
 - 📝 Application Management
 - 🚗 Driver Management
 - 🪪 Local Driving License Management
@@ -698,6 +767,7 @@ Start the desktop client after the API is running.
 - ⚙️ Stored Procedures
 - 🔄 Transactional Business Operations
 - 🌐 RESTful API Communication
+- 🛡️ API Authorization and Rate Limiting
 
 ---
 
@@ -715,7 +785,7 @@ This project demonstrates practical experience with:
 - Implementing transactional business workflows.
 - Handling asynchronous API/database operations.
 - Applying validation and business rules.
-- Managing user authentication and password hashing.
+- Managing JWT authentication, refresh-token rotation, and password hashing.
 - Building reusable WinForms components and services.
 
 ---
@@ -770,7 +840,7 @@ The system also supports additional workflows such as international license issu
 
 Passwords should never be stored as plain text.
 
-This project hashes passwords using **SHA-256** before storing them in the database.
+This project hashes passwords using **BCrypt** before storing them in the database. API access is protected by signed JWT bearer tokens. Configure the JWT signing key through a secret-management mechanism such as ASP.NET Core user secrets or an environment variable; do not commit it to `appsettings.json`.
 
 ---
 
