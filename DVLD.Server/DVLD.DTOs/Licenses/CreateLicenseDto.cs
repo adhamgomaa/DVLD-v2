@@ -1,13 +1,7 @@
 ﻿using DVLD.Shared.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DVLD.DTOs.Licenses
-{
+namespace DVLD.DTOs.Licenses;
     public class CreateLicenseDto
     {
         [Required]
@@ -20,25 +14,11 @@ namespace DVLD.DTOs.Licenses
         public DateTime ExpiredDate { get; set; }
         [Required]
         public decimal Fees { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
         [Required]
         public bool IsActive { get; set; }
         [Required]
         public IssueReasonEnum IssueReason { get; set; }
         [Required]
         public int UserID { get; set; }
-
-        public CreateLicenseDto()
-        {
-            DriverID = -1;
-            AppID = -1;
-            ClassID = -1;
-            ExpiredDate = DateTime.Now;
-            Fees = 0;
-            Notes = string.Empty;
-            IsActive = false;
-            IssueReason = IssueReasonEnum.FirstTime;
-            UserID = -1;
-        }
     }
-}

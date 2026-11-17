@@ -1,9 +1,8 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.LocalLicense;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers
@@ -16,7 +15,7 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<LocalLicenseDto>>> GetAllLocalLicenses(CancellationToken cancellationToken)
         {
-            List<LocalDrivingApplications> licenses = await service.GetAllLocalLicensesAsync(cancellationToken);
+            List<LocalDrivingLicenseApplication> licenses = await service.GetAllLocalLicensesAsync(cancellationToken);
             var licenseDto = licenses.Select(LocalLicenseMapper.ToLocalDto).ToList();
             return Ok(licenseDto);
         }
@@ -29,7 +28,7 @@ namespace DVLD.API.Controllers
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            LocalLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
+            LocalDrivingLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
 
             if (license == null) return NotFound($"There's no license with this Id: {id}");
 
@@ -78,12 +77,12 @@ namespace DVLD.API.Controllers
         [HttpGet("total-trails-per-test/{localId}/{testTypeId}", Name = "GetTotalTrailsPerTest")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<byte>> GetTotalTrailsPerTest(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
+        public async Task<ActionResult<int>> GetTotalTrailsPerTest(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             if (localId < 1)
                 return BadRequest("Invalid data");
 
-            byte result = await service.GetTotalTrailsPerTestAsync(localId, testTypeId, cancellationToken);
+            int result = await service.GetTotalTrailsPerTestAsync(localId, testTypeId, cancellationToken);
 
             return Ok(result);
         }
@@ -133,9 +132,9 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<GetLocalLicenseDto>> AddNewLocalLicense(CreateLocalLicenseDto createLicense, CancellationToken cancellationToken)
         {
-            LocalLicense newLicense = LocalLicenseMapper.ToLicense(createLicense);
+            LocalDrivingLicense newLicense = LocalLicenseMapper.ToLicense(createLicense);
 
-            bool check = await service.CheckPersonHasSameClassAsync(newLicense.PersonId, newLicense.ClassId, cancellationToken);
+            bool check = await service.CheckPersonHasSameClassAsync(newLicense.Application.ApplicantPersonId, newLicense.LicenseClassId, cancellationToken);
             if (check)
                 return StatusCode(500, new { message = "This person has the same class, please choose another class" });
 
@@ -143,9 +142,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding License" });
 
-            LocalLicense? license = await service.FindLocalLicenseAsync(newLicense.LocalId, cancellationToken);
-
-            return CreatedAtRoute("GetLocalLicenseById", new { id = newLicense.LocalId }, LocalLicenseMapper.ToGetDto(license!));
+            return CreatedAtRoute("GetLocalLicenseById", new { id = newLicense.LocalDrivingLicenseApplicationId }, LocalLicenseMapper.ToGetDto(newLicense));
         }
 
         [HttpPut("{id}", Name = "UpdateLocalLicense")]
@@ -158,20 +155,20 @@ namespace DVLD.API.Controllers
             if (id < 1)
                 return BadRequest("Invalid data");
 
-            LocalLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
+            LocalDrivingLicense? license = await service.FindLocalLicenseAsync(id, cancellationToken);
             if (license == null) return NotFound($"There's no license with this Id: {id}");
 
-            license.PersonId = updateLicense.PersonId;
-            license.AppStatus = updateLicense.AppStatus;
-            license.Type = updateLicense.Type;
-            license.StatusDate = updateLicense.StatusDate;
-            license.Fees = updateLicense.Fees;
-            license.UserId = updateLicense.UserId;
-            license.ClassId = updateLicense.ClassId;
+            license.Application.ApplicantPersonId = updateLicense.PersonId;
+            license.Application.ApplicationStatus = updateLicense.AppStatus;
+            license.Application.ApplicationTypeId = updateLicense.Type;
+            license.Application.LastStatusDate = updateLicense.StatusDate;
+            license.Application.PaidFees = updateLicense.Fees;
+            license.Application.CreatedByUserId = updateLicense.UserId;
+            license.LicenseClassId = updateLicense.ClassId;
 
-            bool check = await service.CheckPersonHasSameClassAsync(license.PersonId, license.ClassId, cancellationToken);
+            bool check = await service.CheckPersonHasSameClassAsync(license.Application.ApplicantPersonId, license.LicenseClassId, cancellationToken);
             if (check)
-               return StatusCode(500, new { message = "This person has the same class, please choose another class" });
+                return StatusCode(500, new { message = "This person has the same class, please choose another class" });
 
             bool result = await service.UpdateLocalAsync(license, cancellationToken);
             if (result) return Ok(updateLicense);

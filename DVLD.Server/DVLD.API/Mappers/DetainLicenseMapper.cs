@@ -1,42 +1,41 @@
 ﻿using DVLD.DTOs.DetainLicense;
-using DVLD.DTOs.Licenses;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
     public static class DetainLicenseMapper
     {
-        public static GetDetainDto ToGetDto(DetainLicense license)
+        public static GetDetainDto ToGetDto(DetainedLicense license)
         {
             return new GetDetainDto
             {
-                DetainID = license.DetainID,
+                DetainID = license.DetainId,
                 DetainDate = license.DetainDate,
-                IsRelease = license.IsRelease,
-                ReleaseAppId = license.ReleaseAppId,
-                ReleaseByUserId = license.ReleaseByUserId,
+                IsRelease = license.IsReleased,
+                ReleaseAppId = license.ReleaseApplicationId,
+                ReleaseByUserId = license.ReleasedByUserId,
                 ReleaseDate = license.ReleaseDate,
-                LicenseID = license.LicenseID,
-                Fees = license.Fees,
-                UserID = license.UserID
+                LicenseID = license.LicenseId,
+                Fees = license.DetainFees,
+                UserID = license.CreatedByUserId
             };
         }
 
-        public static DetainLicense ToLicense(CreateDetainLicenseDto createLicense)
+        public static DetainedLicense ToLicense(CreateDetainLicenseDto createLicense)
         {
-            return new DetainLicense
+            return new DetainedLicense
             {
-                LicenseID = createLicense.LicenseID,
-                UserID = createLicense.UserID,
-                Fees = createLicense.Fees
+                LicenseId = createLicense.LicenseID,
+                CreatedByUserId = createLicense.UserID,
+                DetainFees = createLicense.Fees
             };
         }
 
-        public static DetainLicenseDto ToLicenseDto(DetainLicenseInfo license)
+        public static DetainLicenseDto ToLicenseDto(DetainedLicenseInfo license)
         {
             return new DetainLicenseDto
             {
-                ReleaseAppId = license.ReleaseAppId,
+                ReleaseAppId = license.ReleaseApplicationId,
                 ReleaseDate = license.ReleaseDate,
                 DetainDate = license.DetainDate,
                 DetainFees = license.DetainFees,

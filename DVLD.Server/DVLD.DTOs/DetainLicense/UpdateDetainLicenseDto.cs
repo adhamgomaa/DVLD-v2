@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace DVLD.DTOs.DetainLicense
-{
+namespace DVLD.DTOs.DetainLicense;
     public class UpdateDetainLicenseDto
     {
         [Required]
@@ -17,12 +11,4 @@ namespace DVLD.DTOs.DetainLicense
         public DateTime DetainDate { get; set; }
         [Required]
         public int UserID { get; set; }
-        public UpdateDetainLicenseDto()
-        {
-            LicenseID = -1;
-            Fees = 0;
-            UserID = -1;
-            DetainDate = DateTime.Now;
-        }
     }
-}

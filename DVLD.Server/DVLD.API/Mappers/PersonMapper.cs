@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.People;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -11,28 +11,28 @@ namespace DVLD.API.Mappers
             {
                 PersonId = person.PersonId,
                 NationalNo = person.NationalNo,
-                FName = person.FName,
-                SecName = person.SecName,
-                ThName = person.ThName,
-                LName = person.LName,
-                Date = person.Date,
-                Gendor = person.Gendor,
+                FirstName = person.FirstName,
+                SecondName = person.SecondName,
+                ThirdName = person.ThirdName,
+                LastName = person.LastName,
+                Date = person.BirthOfDate,
+                Gender = person.Gendor == 0 ? "Male" : "Female",
                 Address = person.Address,
                 Phone = person.Phone,
                 Email = person.Email,
-                NationaltyId = person.NationaltyId,
+                NationalityId = person.NationalityCountryById,
                 ImagePath = person.ImagePath
             };      
         }
 
-        public static PeopleDto ToPeopleDto(PeopleInfo person)
+        public static PeopleDto ToPeopleDto(PersonInfo person)
         {
             return new PeopleDto
             {
                 PersonId = person.PersonId,
                 NationalNo = person.NationalNo,
                 FullName = person.FullName,
-                Gendor = person.Gendor,
+                Gender = person.Gender,
                 Date = person.Date,
                 Nationality = person.Nationality,
                 Email = person.Email,
@@ -45,16 +45,16 @@ namespace DVLD.API.Mappers
             return new Person
             {
                 NationalNo = createPerson.NationalNo,
-                FName = createPerson.FName,
-                SecName = createPerson.SecName,
-                ThName = createPerson.ThName,
-                LName = createPerson.LName,
-                Date = createPerson.Date,
-                Gendor = createPerson.Gendor,
+                FirstName = createPerson.FirstName,
+                SecondName = createPerson.SecondName,
+                ThirdName = createPerson.ThirdName,
+                LastName = createPerson.LName,
+                BirthOfDate = createPerson.Date,
+                Gendor = createPerson.Gender,
                 Address = createPerson.Address,
                 Phone = createPerson.Phone,
                 Email = createPerson.Email,
-                NationaltyId = createPerson.NationaltyId,
+                NationalityCountryById = createPerson.NationalityId,
                 ImagePath = createPerson.ImagePath
             };
         }

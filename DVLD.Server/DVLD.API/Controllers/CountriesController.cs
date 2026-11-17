@@ -1,8 +1,7 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Countries;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers

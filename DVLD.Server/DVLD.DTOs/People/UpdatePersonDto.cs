@@ -1,51 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace DVLD.DTOs.People
-{
+namespace DVLD.DTOs.People;
+
     public class UpdatePersonDto
     {
         [Required]
-        public string NationalNo { get; set; }
+        public required string NationalNo { get; set; }
         [Required]
-        public string FName { get; set; }
+        public required string FirstName { get; set; }
         [Required]
-        public string SecName { get; set; }
-        public string ThName { get; set; }
+        public required string SecondName { get; set; }
+        public required string ThirdName { get; set; }
         [Required]
-        public string LName { get; set; }
+        public required string LastName { get; set; }
         [Required]
         public DateTime Date { get; set; }
         [Required]
-        public short Gendor { get; set; }
+        public byte Gender { get; set; }
         [Required]
-        public string Address { get; set; }
+        public required string Address { get; set; }
         [Required]
         [Phone]
-        public string Phone { get; set; }
+        public required string Phone { get; set; }
         [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
         [Required]
-        public int NationaltyId { get; set; }
-        public string ImagePath { get; set; }
-        public UpdatePersonDto()
-        {
-            NationalNo = string.Empty;
-            FName = string.Empty;
-            SecName = string.Empty;
-            ThName = string.Empty;
-            LName = string.Empty;
-            Date = DateTime.Now;
-            Gendor = 0;
-            Address = string.Empty;
-            Phone = string.Empty;
-            Email = string.Empty;
-            NationaltyId = -1;
-            ImagePath = string.Empty;
-        }
+        public int NationalityId { get; set; }
+        public string? ImagePath { get; set; }
     }
-}
+

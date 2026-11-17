@@ -1,14 +1,7 @@
 using DVLD.DataAccess.Interfaces;
 using DVLD.Business.Interfaces;
-using DVLD.DataAccess;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DVLD.Business.Implementations
 {
@@ -19,25 +12,12 @@ namespace DVLD.Business.Implementations
             return await applicationTypeData.UpdateTypesAsync(updateTypes, cancellationToken);
         }
 
-        public async Task<ApplicationType?> FindTypeAsync(AppTypeEnum typeID, CancellationToken cancellationToken)
-        {
-            ApplicationType? type = await applicationTypeData.FindTypesAsync(typeID, cancellationToken);
-            if (type != null)
-                return type;
-            return null;
-        }
+        public Task<ApplicationType?> FindTypeAsync(AppTypeEnum typeID, CancellationToken cancellationToken) =>
+            applicationTypeData.FindTypesAsync(typeID, cancellationToken);
 
-        public async Task<ApplicationType?> FindTypeAsync(string title, CancellationToken cancellationToken)
-        {
-            ApplicationType? type = await applicationTypeData.FindTypesAsync(title, cancellationToken);
-            if (type != null)
-                return type;
-            return null;
-        }
-
-        public async Task<List<ApplicationType>> GetAllTypesAsync(CancellationToken cancellationToken)
-        {
-            return await applicationTypeData.GetAllTypesAsync(cancellationToken);
-        }
+        public Task<ApplicationType?> FindTypeAsync(string title, CancellationToken cancellationToken) =>
+            applicationTypeData.FindTypesAsync(title, cancellationToken);
+        public Task<List<ApplicationType>> GetAllTypesAsync(CancellationToken cancellationToken) =>
+            applicationTypeData.GetAllTypesAsync(cancellationToken);
     }
 }

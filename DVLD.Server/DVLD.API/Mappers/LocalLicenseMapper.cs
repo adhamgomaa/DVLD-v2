@@ -1,45 +1,48 @@
 ﻿using DVLD.DTOs.LocalLicense;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
     public static class LocalLicenseMapper
     {
-        public static LocalLicenseDto ToLocalDto(LocalDrivingApplications local)
+        public static LocalLicenseDto ToLocalDto(LocalDrivingLicenseApplication local)
         {
             return new LocalLicenseDto
             {
-                AppDate = local.AppDate,
-                AppId = local.AppId,
+                AppDate = local.ApplicationDate,
+                AppId = local.LDLAppId,
                 Status = local.Status,
-                ClassName = local.ClassName,
+                ClassName = local.DrivingClass,
                 NationalNo = local.NationalNo,
-                PassedTest = local.PassedTest,
+                PassedTest = local.PassedTests,
                 FullName = local.FullName
             };
         }
 
-        public static GetLocalLicenseDto ToGetDto(LocalLicense license)
+        public static GetLocalLicenseDto ToGetDto(LocalDrivingLicense license)
         {
             return new GetLocalLicenseDto
             {
-                AppId = license.AppId,
-                ClassId = license.ClassId,
-                LocalId = license.LocalId
+                AppId = license.ApplicationId,
+                ClassId = license.LicenseClassId,
+                LocalId = license.LocalDrivingLicenseApplicationId
             };
         }
 
-        public static LocalLicense ToLicense(CreateLocalLicenseDto createLicense)
+        public static LocalDrivingLicense ToLicense(CreateLocalLicenseDto createLicense)
         {
-            return new LocalLicense
+            return new LocalDrivingLicense
             {
-                PersonId = createLicense.PersonId,
-                StatusDate = createLicense.StatusDate,
-                AppStatus = createLicense.AppStatus,
-                Type = createLicense.Type,
-                ClassId = createLicense.ClassId,
-                Fees = createLicense.Fees,
-                UserId = createLicense.UserId,
+                Application = new Application
+                {
+                    ApplicantPersonId = createLicense.PersonId,
+                    LastStatusDate = createLicense.StatusDate,
+                    ApplicationStatus = createLicense.AppStatus,
+                    ApplicationTypeId = createLicense.Type,
+                    PaidFees = createLicense.Fees,
+                    CreatedByUserId = createLicense.UserId
+                },
+                LicenseClassId = createLicense.ClassId,
             };
         }
     }

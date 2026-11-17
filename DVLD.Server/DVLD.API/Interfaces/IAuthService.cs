@@ -1,4 +1,3 @@
-using System;
 using DVLD.DTOs.Auth;
 
 namespace DVLD.API.Interfaces;

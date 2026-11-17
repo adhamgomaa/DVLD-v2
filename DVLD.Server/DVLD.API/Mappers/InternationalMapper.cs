@@ -1,7 +1,5 @@
-﻿using DVLD.DTOs.DetainLicense;
-using DVLD.DTOs.InternationalLicense;
-using DVLD.DTOs.Licenses;
-using DVLD.Shared.Entities;
+﻿using DVLD.DTOs.InternationalLicense;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -11,27 +9,27 @@ namespace DVLD.API.Mappers
         {
             return new InternationalLicenseDto
             {
-                AppID = license.AppID,
+                AppID = license.ApplicationId,
                 IsActive = license.IsActive,
                 ExpirationDate = license.ExpirationDate,
                 IssueDate = license.IssueDate,
-                DriverID = license.DriverID,
-                InternationalID = license.InternationalID,
-                LocalLicenseID = license.LocalLicenseID,
-                UserID = license.UserID
+                DriverID = license.DriverId,
+                InternationalID = license.InternationalLicenseId,
+                LocalLicenseID = license.IssuedUsingLocalLicenseId,
+                UserID = license.CreatedByUserId
             };
         }
         public static InternationalHistoryDto ToLicenseHistoryDto(InternationalLicense license)
         {
             return new InternationalHistoryDto
             {
-                AppID = license.AppID,
+                AppID = license.ApplicationId,
                 IsActive = license.IsActive,
                 ExpirationDate = license.ExpirationDate,
                 IssueDate = license.IssueDate,
-                InternationalID = license.InternationalID,
-                LocalLicenseID = license.LocalLicenseID,
-                UserID = license.UserID
+                InternationalID = license.InternationalLicenseId,
+                LocalLicenseID = license.IssuedUsingLocalLicenseId,
+                UserID = license.CreatedByUserId
             };
         }
 
@@ -39,16 +37,20 @@ namespace DVLD.API.Mappers
         {
             return new InternationalLicense
             {
-                PersonId = createLicense.PersonId,
-                AppStatus = createLicense.AppStatus,
-                Type = createLicense.Type,
-                StatusDate = createLicense.StatusDate,
-                DriverID = createLicense.DriverID,
+                Application = new Application
+                {
+                    ApplicantPersonId = createLicense.PersonId,
+                    ApplicationStatus = createLicense.AppStatus,
+                    ApplicationTypeId = createLicense.Type,
+                    LastStatusDate = createLicense.StatusDate,
+                    PaidFees = createLicense.Fees,
+                    CreatedByUserId = createLicense.UserId
+                },
+                DriverId= createLicense.DriverID,
                 ExpirationDate = createLicense.ExpirationDate,
                 IsActive = createLicense.IsActive,
-                LocalLicenseID= createLicense.LocalLicenseID,
-                UserID = createLicense.UserID,
-                Fees = createLicense.Fees
+                IssuedUsingLocalLicenseId= createLicense.LocalLicenseID,
+                CreatedByUserId = createLicense.UserId,
             };
         }
     }

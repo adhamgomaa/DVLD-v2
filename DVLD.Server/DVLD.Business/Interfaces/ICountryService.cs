@@ -1,4 +1,4 @@
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
 
 namespace DVLD.Business.Interfaces;

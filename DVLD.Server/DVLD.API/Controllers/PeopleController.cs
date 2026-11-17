@@ -1,8 +1,7 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.People;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -16,7 +15,7 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<PeopleDto>>> GetAllPeople(CancellationToken cancellationToken)
         {
-            List<PeopleInfo> people = await service.GetPeopleAsync(cancellationToken);
+            List<PersonInfo> people = await service.GetPeopleAsync(cancellationToken);
             var personDto = people.Select(PersonMapper.ToPeopleDto).ToList();
             return Ok(personDto);
         }
@@ -98,16 +97,16 @@ namespace DVLD.API.Controllers
             if (person == null) return NotFound($"There's no person with this Id: {id}");
 
             person.NationalNo = updatePerson.NationalNo;
-            person.FName = updatePerson.FName;
-            person.SecName = updatePerson.SecName;
-            person.ThName = updatePerson.ThName;
-            person.LName = updatePerson.LName;
-            person.Date = updatePerson.Date;
-            person.Gendor = updatePerson.Gendor;
+            person.FirstName = updatePerson.FirstName;
+            person.SecondName = updatePerson.SecondName;
+            person.ThirdName = updatePerson.ThirdName;
+            person.LastName = updatePerson.LastName;
+            person.BirthOfDate = updatePerson.Date;
+            person.Gendor = updatePerson.Gender;
             person.Address = updatePerson.Address;
             person.Phone = updatePerson.Phone;
             person.Email = updatePerson.Email;
-            person.NationaltyId = updatePerson.NationaltyId;
+            person.NationalityCountryById = updatePerson.NationalityId;
             person.ImagePath = updatePerson.ImagePath;
 
             bool result = await service.UpdatePersonAsync(person, cancellationToken);

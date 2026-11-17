@@ -1,4 +1,4 @@
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.Business;
 

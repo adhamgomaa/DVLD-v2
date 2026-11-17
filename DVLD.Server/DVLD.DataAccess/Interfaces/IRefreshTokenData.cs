@@ -1,14 +1,11 @@
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.DataAccess.Interfaces;
 
 public interface IRefreshTokenData
 {
     Task<long> AddAsync(
-        int userId,
-        string tokenHash,
-        DateTime expiresAt,
-        Guid tokenFamilyId,
+        RefreshToken newToken,
         CancellationToken cancellationToken);
 
     Task<RefreshToken?> GetByHashAsync(string tokenHash, CancellationToken cancellationToken);

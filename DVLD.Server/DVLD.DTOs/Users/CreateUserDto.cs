@@ -5,24 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DVLD.DTOs.Users
-{
-    public class CreateUserDto
-    {
-        [Range(1, int.MaxValue)]
-        public int PersonId { get; set; }
-        [Required, MinLength(3), MaxLength(100)]
-        public string UserName { get; set; }
-        [Required, MinLength(8), MaxLength(128)]
-        public string Password { get; set; }
-        public bool IsActive { get; set; }
+namespace DVLD.DTOs.Users;
 
-        public CreateUserDto()
-        {
-            this.PersonId = -1;
-            this.UserName = string.Empty;
-            this.Password = string.Empty;
-            this.IsActive = false;
-        }
-    }
+public class CreateUserDto
+{
+    [Range(1, int.MaxValue)]
+    public int PersonId { get; set; }
+    [Required, MinLength(3), MaxLength(100)]
+    public required string UserName { get; set; }
+    [Required, MinLength(8), MaxLength(128)]
+    public required string Password { get; set; }
+    public bool IsActive { get; set; }
 }
+

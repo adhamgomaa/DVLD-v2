@@ -1,23 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace DVLD.DTOs.ApplicationTypes
-{
+namespace DVLD.DTOs.ApplicationTypes;
     public class UpdateAppTypeDto
     {
         [Required]
-        public string Title { get; set; }
+        public required string Title { get; set; }
         [Required]
         public decimal Fees { get; set; }
-
-        public UpdateAppTypeDto()
-        {
-            Title = string.Empty;
-            Fees = 0;
-        }
     }
-}

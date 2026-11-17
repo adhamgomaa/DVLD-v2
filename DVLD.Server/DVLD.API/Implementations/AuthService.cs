@@ -8,7 +8,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DVLD.API.Configuration;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Implementations;
 
@@ -24,33 +24,27 @@ public sealed class AuthService(
         CancellationToken cancellationToken)
     {
         var user = await userService.FindUserAsync(loginRequest.UserName, cancellationToken);
+        var login = new LoginAttempt
+        {
+            UserId = user?.UserId,
+            AttemptedUserName = loginRequest.UserName,
+            Succeeded = false,
+            ClientIpAddress = clientIpAddress
+        };
         if (user is null)
         {
-            await loginAttemptService.RecordAsync(
-                null,
-                loginRequest.UserName,
-                false,
-                clientIpAddress,
-                cancellationToken);
+            await loginAttemptService.RecordAsync(login, cancellationToken);
+
             return null;
         }
         if (!user.IsActive || !BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.Password))
         {
-            await loginAttemptService.RecordAsync(
-                user.UserId,
-                loginRequest.UserName,
-                false,
-                clientIpAddress,
-                cancellationToken);
+            await loginAttemptService.RecordAsync(login, cancellationToken);
             return null;
         }
 
-        await loginAttemptService.RecordAsync(
-            user.UserId,
-            loginRequest.UserName,
-            true,
-            clientIpAddress,
-            cancellationToken);
+        login.Succeeded = true;
+        await loginAttemptService.RecordAsync(login, cancellationToken);
 
         var refreshToken = await refreshTokenService.CreateAsync(
             user.UserId,
@@ -86,7 +80,7 @@ public sealed class AuthService(
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString(CultureInfo.InvariantCulture)),
-            new Claim(ClaimTypes.Name, user.UserName)
+            new Claim(ClaimTypes.Name, user.Username)
         };
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SigningKey));

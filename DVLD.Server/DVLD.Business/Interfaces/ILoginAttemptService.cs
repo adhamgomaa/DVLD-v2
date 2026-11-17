@@ -1,14 +1,11 @@
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.Business.Interfaces;
 
 public interface ILoginAttemptService
 {
     Task RecordAsync(
-        int? userId,
-        string attemptedUserName,
-        bool succeeded,
-        string? clientIpAddress,
+        LoginAttempt newLogin,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<LoginAttempt>> GetRecentAsync(

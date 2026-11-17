@@ -1,11 +1,11 @@
 ﻿using DVLD.DTOs.Drivers;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
     public class DriverMapper
     {
-        public static DriverDto ToDriverDto(DriverInfo driver)
+        public static DriverDto ToDriverDto(DriverView driver)
         {
             return new DriverDto
             {
@@ -14,7 +14,7 @@ namespace DVLD.API.Mappers
                 Date = driver.Date,
                 DriverId = driver.DriverId,
                 FullName = driver.FullName,
-                ActiveLicense = driver.ActiveLicense
+                ActiveLicense = driver.ActiveLicenses
             };
         }
         
@@ -22,18 +22,18 @@ namespace DVLD.API.Mappers
         {
             return new GetDriverDto
             {
-                DriverID = driver.DriverID,
+                DriverID = driver.DriverId,
                 CreatedDate = driver.CreatedDate,
-                PersonID = driver.PersonID,
-                UserID = driver.UserID
+                PersonID = driver.PersonId,
+                UserID = driver.CreatedByUserId
             };
         }
-        public static Driver ToDriver(CreateDriverDto createdriver)
+        public static Driver ToDriver(CreateDriverDto createDriver)
         {
             return new Driver
             {
-                PersonID = createdriver.PersonID,
-                UserID = createdriver.UserID
+                PersonId = createDriver.PersonID,
+                CreatedByUserId = createDriver.UserID
             };
         }
     }

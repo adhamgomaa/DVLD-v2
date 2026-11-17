@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.ApplicationTypes;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -10,7 +10,7 @@ namespace DVLD.API.Mappers
             return new TypesDto
             {
                 Title = type.Title,
-                TypeID = type.TypeID,
+                TypeID = type.ApplicationTypeId,
                 Fees = type.Fees
             };
         }

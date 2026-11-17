@@ -1,14 +1,6 @@
 using DVLD.DataAccess.Interfaces;
 using DVLD.Business.Interfaces;
-using DVLD.DataAccess;
-using DVLD.Shared.Entities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DVLD.Shared.Models;
 
 namespace DVLD.Business.Implementations
 {
@@ -16,39 +8,23 @@ namespace DVLD.Business.Implementations
     {
         public async Task<bool> AddNewLicenseAsync(InternationalLicense newLicense, CancellationToken cancellationToken)
         {
-            newLicense.InternationalID = await internationalLicenseData.AddNewInternationalLicenseAsync(newLicense, cancellationToken);
-            return newLicense.InternationalID != -1;
+            await internationalLicenseData.AddNewInternationalLicenseAsync(newLicense, cancellationToken);
+            return newLicense.InternationalLicenseId != -1;
         }
 
-        public async Task<InternationalLicense?> FindLicenseAsync(int internationalID, CancellationToken cancellationToken)
-        {
-            InternationalLicense? license = await internationalLicenseData.FindLicenseAsync(internationalID, cancellationToken);
-            if (license != null)
-                return license;
-            return null;
-        }
+        public Task<InternationalLicense?> FindLicenseAsync(int internationalID, CancellationToken cancellationToken) =>
+            internationalLicenseData.FindLicenseAsync(internationalID, cancellationToken);
 
-        public async Task<InternationalLicense?> FindLicenseByLocalIdAsync(int localId, CancellationToken cancellationToken)
-        {
-            InternationalLicense? license = await internationalLicenseData.FindLicenseByLocalIdAsync(localId, cancellationToken);
-            if (license != null)
-                return license;
-            return null;
-        }
+        public Task<InternationalLicense?> FindLicenseByLocalIdAsync(int localId, CancellationToken cancellationToken) =>
+            internationalLicenseData.FindLicenseByLocalIdAsync(localId, cancellationToken);
 
-        public async Task<List<InternationalLicense>> GetAllLicensesAsync(CancellationToken cancellationToken)
-        {
-            return await internationalLicenseData.GetAllLicensesAsync(cancellationToken);
-        }
+        public Task<List<InternationalLicense>> GetAllLicensesAsync(CancellationToken cancellationToken) =>
+            internationalLicenseData.GetAllLicensesAsync(cancellationToken);
 
-        public async Task<List<InternationalLicense>> GetInternationalLicensesHistoryAsync(int driverId, CancellationToken cancellationToken)
-        {
-            return await internationalLicenseData.GetInternaionalLicenseHistoryAsync(driverId, cancellationToken);
-        }
+        public Task<List<InternationalLicense>> GetInternationalLicensesHistoryAsync(int driverId, CancellationToken cancellationToken) =>
+            internationalLicenseData.GetInternationalLicenseHistoryAsync(driverId, cancellationToken);
 
-        public async Task<int> GetActiveInternationalLicenseIdAsync(int driverId, CancellationToken cancellationToken)
-        {
-            return await internationalLicenseData.GetActiveInternationalLicenseIdAsync(driverId, cancellationToken);
-        }
+        public Task<int> GetActiveInternationalLicenseIdAsync(int driverId, CancellationToken cancellationToken) =>
+            internationalLicenseData.GetActiveInternationalLicenseIdAsync(driverId, cancellationToken);
     }
 }

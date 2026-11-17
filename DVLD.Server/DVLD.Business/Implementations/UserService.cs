@@ -1,13 +1,6 @@
 using DVLD.DataAccess.Interfaces;
 using DVLD.Business.Interfaces;
-using DVLD.DataAccess;
-using DVLD.Shared.Entities;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DVLD.Shared.Models;
 
 namespace DVLD.Business.Implementations
 {
@@ -16,7 +9,7 @@ namespace DVLD.Business.Implementations
         public async Task<bool> AddNewUserAsync(User newUser, CancellationToken cancellationToken)
         {
             newUser.Password = cryptographyService.Hashing(newUser.Password);
-            newUser.UserId = await userData.AddNewUserAsync(newUser, cancellationToken);
+            await userData.AddNewUserAsync(newUser, cancellationToken);
             return newUser.UserId != -1;
         }
 
@@ -40,54 +33,25 @@ namespace DVLD.Business.Implementations
             return await userData.UpdateUserAsync(user, cancellationToken);
         }
 
-        public async Task<User?> FindUserAsync(int id, CancellationToken cancellationToken)
-        {
-            User? user = await userData.GetUserAsync(id, cancellationToken);
-            if (user != null)
-                return user;
-            return null;
-        }
+        public Task<User?> FindUserAsync(int id, CancellationToken cancellationToken) =>
+            userData.GetUserAsync(id, cancellationToken);
 
-        public async Task<User?> FindUserAsync(string username, CancellationToken cancellationToken)
-        {
-            User? user = await userData.GetUserAsync(username, cancellationToken);
-            if (user != null)
-                return user;
-            return null;
-        }
+        public Task<User?> FindUserAsync(string username, CancellationToken cancellationToken) =>
+            userData.GetUserAsync(username, cancellationToken);
 
-        public async Task<User?> FindUserAsync(string username, string password, CancellationToken cancellationToken)
-        {
-            password = cryptographyService.Hashing(password);
-            User? user = await userData.GetUserAsync(username, password, cancellationToken);
-            if (user != null)
-                return user;
-            return null;
-        }
+        public Task<List<UserInfo>> GetUsersAsync(CancellationToken cancellationToken) =>
+            userData.GetAllUsersAsync(cancellationToken);
 
-        public async Task<List<UserInfo>> GetUsersAsync(CancellationToken cancellationToken)
-        {
-            return await userData.GetAllUsersAsync(cancellationToken);
-        }
+        public Task<bool> IsUserExistAsync(int id, CancellationToken cancellationToken) =>
+            userData.IsUserExistAsync(id, cancellationToken);
 
-        public async Task<bool> IsUserExistAsync(int id, CancellationToken cancellationToken)
-        {
-            return await userData.IsUserExistAsync(id, cancellationToken);
-        }
+        public Task<bool> IsUserExistAsync(string username, CancellationToken cancellationToken) =>
+            userData.IsUserExistAsync(username, cancellationToken);
 
-        public async Task<bool> IsUserExistAsync(string username, CancellationToken cancellationToken)
-        {
-            return await userData.IsUserExistAsync(username, cancellationToken);
-        }
+        public Task<bool> IsUserExistByPersonIdAsync(int id, CancellationToken cancellationToken) =>
+            userData.IsUserExistByPersonIdAsync(id, cancellationToken);
 
-        public async Task<bool> IsUserExistByPersonIdAsync(int id, CancellationToken cancellationToken)
-        {
-            return await userData.IsUserExistByPersonIdAsync(id, cancellationToken);
-        }
-
-        public async Task<bool> DeleteUserAsync(int id, CancellationToken cancellationToken)
-        {
-            return await userData.DeleteUserAsync(id, cancellationToken);
-        }
+        public Task<bool> DeleteUserAsync(int id, CancellationToken cancellationToken) =>
+            userData.DeleteUserAsync(id, cancellationToken);
     }
 }

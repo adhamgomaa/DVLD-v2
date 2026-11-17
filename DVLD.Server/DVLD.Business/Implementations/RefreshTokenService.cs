@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DVLD.Business.Interfaces;
 using DVLD.DataAccess.Interfaces;
+using DVLD.Shared.Models;
 
 namespace DVLD.Business.Implementations;
 
@@ -15,17 +16,30 @@ public sealed class RefreshTokenService(
         TimeSpan lifetime,
         CancellationToken cancellationToken)
     {
+        if (userId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(userId), "UserId must be greater than zero.");
+        }
+
+        if (tokenFamilyId == Guid.Empty)
+        {
+            throw new ArgumentException("Token family id cannot be empty.", nameof(tokenFamilyId));
+        }
+
         ValidateLifetime(lifetime);
         var token = GenerateToken();
         var tokenHash = HashToken(token);
         var expiresAt = DateTime.UtcNow.Add(lifetime);
 
-        var refreshTokenId = await refreshTokenData.AddAsync(
-            userId,
-            tokenHash,
-            expiresAt,
-            tokenFamilyId,
-            cancellationToken);
+        var newRefresh = new RefreshToken
+        {
+            UserId = userId,
+            TokenHash = tokenHash,
+            ExpiresAt = expiresAt,
+            TokenFamilyId = tokenFamilyId
+        };
+
+        var refreshTokenId = await refreshTokenData.AddAsync(newRefresh, cancellationToken);
 
         if (refreshTokenId <= 0)
         {

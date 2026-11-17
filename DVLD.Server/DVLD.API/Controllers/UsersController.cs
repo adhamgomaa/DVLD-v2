@@ -1,11 +1,10 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Users;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DVLD.API.Controllers
 {
@@ -132,7 +131,7 @@ namespace DVLD.API.Controllers
             if (user == null) return NotFound($"There's no user with this Id: {id}");
 
             user.PersonId = updateUser.PersonId;
-            user.UserName = updateUser.UserName;
+            user.Username = updateUser.UserName;
             if (!string.IsNullOrWhiteSpace(updateUser.Password))
                 user.Password = updateUser.Password;
             user.IsActive = updateUser.IsActive;

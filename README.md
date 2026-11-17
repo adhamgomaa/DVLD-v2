@@ -1,707 +1,420 @@
-# DVLD - Driving & Vehicle License Department System
+# DVLD - Driving and Vehicle License Department
 
-A full-stack **Driving & Vehicle License Department (DVLD)** management system built with a **Windows Forms desktop client** and a **RESTful ASP.NET Core Web API**. The system manages people, users, applications, driving tests, local and international licenses, detained licenses, and the complete workflow required to issue and manage driving licenses.
+<p align="center">
+  <img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white" alt="C#" />
+  <img src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET" />
+  <img src="https://img.shields.io/badge/ASP.NET%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt="ASP.NET Core" />
+  <img src="https://img.shields.io/badge/Windows%20Forms-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Forms" />
+  <img src="https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="SQL Server" />
+</p>
 
-The project was designed with a clear separation between the presentation, business, data-access, and API layers, with SQL Server handling persistent data and business operations through stored procedures. The API is secured with JWT bearer authentication, refresh-token rotation, authorization, HTTPS, and rate limiting.
+<p align="center">
+  <img src="https://img.shields.io/badge/REST%20API-02569B?style=for-the-badge&logo=swagger&logoColor=white" alt="REST API" />
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/Entity%20Framework%20Core-512BD4?style=for-the-badge&logo=nuget&logoColor=white" alt="Entity Framework Core" />
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
+  <img src="https://img.shields.io/badge/BCrypt-5C2D91?style=for-the-badge&logo=letsencrypt&logoColor=white" alt="BCrypt" />
+</p>
 
----
+DVLD is a full-stack desktop application that models the core workflows of a driving and vehicle license department. It combines a Windows Forms client with an ASP.NET Core REST API and Microsoft SQL Server, covering person records, system users, applications, test appointments, license issuance, renewals, replacements, international licenses, and license detention.
 
-## 📌 Project Overview
-
-DVLD is a desktop-based management system that simulates the workflow of a driving and vehicle license department.
-
-The system allows authorized users to:
-
-- Manage people and their personal information.
-- Manage system users and their accounts.
-- Create and manage driving-license applications.
-- Manage different application types and fees.
-- Manage driving-license classes.
-- Register drivers.
-- Schedule and manage driving tests.
-- Record test results and track previous attempts.
-- Issue, renew, replace, deactivate, and manage local driving licenses.
-- Issue and manage international driving licenses.
-- Detain and release driving licenses.
-- Track application and license history.
-- Search and filter records efficiently.
-- Enforce business rules and validation at the server/database level.
+The repository demonstrates a layered architecture, interface-based dependency injection, DTO mapping, asynchronous data access, JWT authentication, refresh-token rotation, BCrypt password hashing, centralized HTTP communication, and database views and procedures.
 
 ---
 
-## 🏗️ Architecture
+## Contents
 
-The project follows a layered architecture with a desktop client communicating with the server through HTTP APIs.
-
-```text
-┌──────────────────────────────┐
-│       WinForms Client        │
-│     Presentation Layer       │
-└──────────────┬───────────────┘
-               │ HTTP / REST
-               ▼
-┌──────────────────────────────┐
-│      ASP.NET Core Web API    │
-│          API Layer           │
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│       Business Layer         │
-│   Business Rules & Services  │
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│       Data Access Layer      │
-│       ADO.NET + SQL Server   │
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│          SQL Server          │
-│ Tables / Views / Procedures  │
-└──────────────────────────────┘
-```
-
-### Main architectural concepts
-
-- Separation of Concerns
-- Layered Architecture
-- RESTful APIs
-- DTO-based communication
-- Business/service layer
-- Data Access Layer
-- ADO.NET
-- Dependency Injection
-- Async programming
-- SQL Server stored procedures
-- Database transactions
-- Centralized API client communication
-- JWT bearer authentication
-- Refresh-token rotation
-- API authorization and rate limiting
-- Swagger/OpenAPI security definitions
+- [Key Features](#key-features)
+- [Screenshots](#screenshots)
+- [System Architecture](#system-architecture)
+- [Solution Structure](#solution-structure)
+- [Technology Stack](#technology-stack)
+- [Core Domain Workflows](#core-domain-workflows)
+- [Authentication and Security](#authentication-and-security)
+- [API Surface](#api-surface)
+- [Database](#database)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Running the Projects](#running-the-projects)
+- [Author](#author)
 
 ---
 
-## 🖥️ Client Application
+## Key Features
 
-The client is a **Windows Forms application** that provides the user interface for the DVLD system.
+### People and users
 
-The WinForms application communicates with the server through the ASP.NET Core Web API instead of accessing the database directly.
+- Create, update, search, and delete people.
+- Enforce unique national numbers.
+- Store nationality, personal details, contact information, and profile images.
+- Create system users linked to people.
+- Activate or deactivate accounts.
+- Change passwords using BCrypt verification and hashing.
 
-### Client responsibilities
+### Applications and drivers
 
-- Display and manage application screens.
-- Collect and validate user input.
-- Communicate with API endpoints using `HttpClient`.
-- Work with DTOs returned by the API.
-- Authenticate through the API and attach bearer access tokens to protected requests.
-- Refresh expired access tokens without interrupting the user workflow.
-- Display people, users, drivers, applications, tests, and licenses.
-- Handle searching and filtering.
-- Provide forms for creating and updating records.
-- Manage user interaction and application workflow.
+- Manage application types and fees.
+- Track application status and lifecycle dates.
+- Register people as drivers.
+- Search and list drivers with personal and license information.
+
+### Local driving license workflow
+
+- Submit a local driving-license application.
+- Select a license class and validate eligibility.
+- Schedule vision, theory, and practical test appointments.
+- Prevent duplicate active appointments and retake misuse.
+- Record test results and track passed tests and attempts.
+- Issue a local license after requirements are completed.
+- View local-license history for a driver.
+
+### License operations
+
+- Renew an existing license.
+- Replace a lost or damaged license.
+- Deactivate licenses.
+- Detain and release local licenses.
+- Create and track release applications.
+- Issue international driving licenses.
+- Review international-license applications and history.
+
+### Administrative and reporting screens
+
+- Application and test-type configuration.
+- License-class management.
+- Detained-license management.
+- License history and active-license searches.
+- Database-backed views for driver and local-application summaries.
 
 ---
 
-## 🌐 Server Application
+## Screenshots
 
-The server is implemented using **ASP.NET Core Web API**.
+<p align="center">
+  <img src="./Screenshots/Login.png" alt="DVLD login" width="49%" />
+  <img src="./Screenshots/Main.png" alt="DVLD main dashboard" width="49%" />
+</p>
 
-It acts as the central entry point between the desktop client and the database.
-
-### Server responsibilities
-
-- Expose RESTful API endpoints.
-- Validate incoming requests.
-- Apply business rules.
-- Convert between entities and DTOs.
-- Handle authentication-related operations.
-- Issue, rotate, revoke, and validate access and refresh tokens.
-- Apply authorization policies and rate limits to API requests.
-- Communicate with the Data Access Layer.
-- Return appropriate HTTP responses.
-- Centralize database access behind the API.
-
----
-
-## 🗄️ Database
-
-The project uses **Microsoft SQL Server**.
-
-The database is organized around the main entities of a driving-license department.
-
-### Main tables
-
-| Table | Purpose |
+| Area | Screenshot |
 |---|---|
-| `People` | Stores personal information of applicants and system users. |
-| `Countries` | Stores nationality/country information. |
-| `Users` | Stores system user accounts and account status. |
-| `Application` | Stores general applications submitted by people. |
-| `ApplicationTypes` | Defines application types and their fees. |
-| `LicenseClass` | Defines driving-license classes, requirements, validity, and fees. |
-| `Driver` | Represents registered drivers. |
-| `LocalDrivingLicense` | Connects a driving application with a license class. |
-| `Licenses` | Stores issued local driving licenses. |
-| `InternationalLicenses` | Stores international driving licenses. |
-| `TestType` | Defines available driving test types and fees. |
-| `TestAppointment` | Stores scheduled driving-test appointments. |
-| `Tests` | Stores the actual test results. |
-| `DetainedLicenses` | Stores detained licenses and their release information. |
-| `RefreshTokens` | Stores hashed refresh tokens, expiry, rotation, and revocation data. |
-| `LoginAttempts` | Records login attempts used for authentication monitoring and throttling. |
-
-The database schema contains primary keys, foreign keys, unique constraints, default values, views, stored procedures, and transactional operations.
+| People management | [Manage People](./Screenshots/Manage%20People.png) |
+| User management | [Users and Drivers](./Screenshots/Users%20&%20Drivers.png) |
+| Add user | [Add User](./Screenshots/Add%20User.png) |
+| User details | [User Info](./Screenshots/User%20Info.png) |
+| Application types | [Application Types](./Screenshots/Application%20Types.png) |
+| Test types | [Test Types](./Screenshots/Test%20Types.png) |
+| Local applications | [Local License Applications](./Screenshots/Local%20License%20Applications.png) |
+| Local license | [Local License](./Screenshots/Local%20License.png) |
+| International applications | [International License Applications](./Screenshots/International%20License%20Applications.png) |
+| International license | [International License](./Screenshots/International%20License.png) |
+| License history | [License History](./Screenshots/License%20History.png) |
+| License detention | [Detain Licenses](./Screenshots/Detain%20Licenses.png) |
+| Lost or damaged replacement | [Replace License](./Screenshots/Replace%20License.png) |
 
 ---
 
-## 🔗 Database Relationships
-
-The core relationship flow can be summarized as follows:
+## System Architecture
 
 ```text
-People
-  │
-  ├──────────────► Users
-  │
-  ├──────────────► Driver
-  │                    │
-  │                    ├────────► Licenses
-  │                    │              │
-  │                    │              └──────► DetainedLicenses
-  │                    │
-  │                    └────────► InternationalLicenses
-  │
-  └──────────────► Application
-                         │
-                         ├────────► ApplicationTypes
-                         │
-                         └────────► LocalDrivingLicense
-                                         │
-                                         ├────────► LicenseClass
-                                         │
-                                         └────────► TestAppointment
-                                                        │
-                                                        ├────────► TestType
-                                                        │
-                                                        └────────► Tests
-
-People ───────────────► Countries
+┌─────────────────────────────────┐
+│  Windows Forms Presentation     │
+│  Forms, controls, API services  │
+└────────────────┬────────────────┘
+                 │ HTTPS / REST / JSON
+                 ▼
+┌─────────────────────────────────┐
+│  ASP.NET Core Web API           │
+│  Controllers, DTOs, JWT auth    │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│  Business Layer                 │
+│  Domain rules and orchestration │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│  Data Access Layer              │
+│  Repository interfaces and EF Core │
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│  Microsoft SQL Server           │
+│  Tables, views, procedures, constraints │
+└─────────────────────────────────┘
 ```
 
-### ER Diagram
+### Architectural responsibilities
 
-```mermaid
-erDiagram
+| Layer | Responsibility |
+|---|---|
+| Windows Forms | User interaction, form validation, session state, and API calls |
+| API | HTTP endpoints, request validation, response codes, authentication, and authorization |
+| DTOs | Stable client/server contracts and data transfer |
+| Business | Domain rules, password verification, login, licensing, and refresh-token orchestration |
+| Data access | EF Core queries, updates, transaction coordination, and database mappings |
+| Database | Referential integrity, constraints, views, procedures, and stored domain data |
 
-    People ||--o{ Users : "has"
-    People ||--o{ Driver : "can become"
-    Countries ||--o{ People : "nationality"
+The API registers services and data implementations through ASP.NET Core dependency injection. Cancellation tokens are propagated through the API, business, and data-access boundaries for asynchronous operations.
 
-    People ||--o{ Application : "submits"
-    Users ||--o{ Application : "creates"
-    ApplicationTypes ||--o{ Application : "defines"
+---
 
-    Application ||--o| LocalDrivingLicense : "creates"
-    LicenseClass ||--o{ LocalDrivingLicense : "belongs to"
+## Solution Structure
 
-    LocalDrivingLicense ||--o{ TestAppointment : "has"
-    TestType ||--o{ TestAppointment : "defines"
-    Users ||--o{ TestAppointment : "creates"
-    Application ||--o{ TestAppointment : "retake application"
+```text
+DVLD-v2/
+├── DVLD.Client/
+│   ├── DVLD.Client.sln
+│   └── DVLD.WinForms/
+│       ├── Forms/
+│       ├── Services/
+│       ├── Helpers/
+│       ├── Resources/
+│       └── appsettings.json
+├── DVLD.Server/
+│   ├── DVLD.Server.sln
+│   ├── DVLD.API/
+│   │   ├── Controllers/
+│   │   ├── Configuration/
+│   │   ├── Implementations/
+│   │   └── Mappers/
+│   ├── DVLD.Business/
+│   │   ├── Implementations/
+│   │   └── Interfaces/
+│   ├── DVLD.DataAccess/
+│   │   ├── Data/
+│   │   ├── Implementations/
+│   │   └── Interfaces/
+│   ├── DVLD.DTOs/
+│   └── DVLD.Shared/
+│       ├── Models/
+│       └── Enums/
+├── Database/
+│   └── database.sql
+└── Screenshots/
+```
 
-    TestAppointment ||--o{ Tests : "has"
-    Users ||--o{ Tests : "creates"
+The server and client are separate solutions so each can be built and run independently. The DTO project is shared with the WinForms client.
 
-    Driver ||--o{ Licenses : "owns"
-    Application ||--o{ Licenses : "supports"
-    LicenseClass ||--o{ Licenses : "classifies"
-    Users ||--o{ Licenses : "creates"
+---
 
-    Licenses ||--o{ DetainedLicenses : "can be detained"
-    Users ||--o{ DetainedLicenses : "creates/releases"
-    Application ||--o{ DetainedLicenses : "release application"
+## Technology Stack
 
-    Driver ||--o{ InternationalLicenses : "owns"
-    Application ||--o{ InternationalLicenses : "supports"
-    Licenses ||--o{ InternationalLicenses : "issued using"
-    Users ||--o{ InternationalLicenses : "creates"
+| Area | Technologies |
+|---|---|
+| Client | C#, Windows Forms, .NET 8, `HttpClient`, async/await |
+| API | ASP.NET Core 8, REST, JWT Bearer authentication, Swagger/OpenAPI |
+| Business | Interface-based services, dependency injection, BCrypt |
+| Data access | Entity Framework Core 8, SQL Server provider |
+| Database | Microsoft SQL Server, T-SQL, tables, views, constraints, procedures |
+| Security | BCrypt, HMAC SHA-256 JWT signing, refresh-token hashing, HTTPS, CORS, rate limiting |
+
+---
+
+## Core Domain Workflows
+
+### Local driving license issuance
+
+```text
+Person
+  → Create application
+  → Select license class
+  → Schedule test appointments
+  → Record test results
+  → Pass required test types
+  → Register as a driver
+  → Issue local license
+  → Renew / replace / detain / release / deactivate
+```
+
+### International license issuance
+
+```text
+Person → Driver → Active local license
+  → Validate eligibility
+  → Create international application
+  → Issue international license
+  → Track international license history
+```
+
+### Detained-license release
+
+```text
+Select detained license
+  → Create release application
+  → Record detention and release fees
+  → Update release status
+  → Store release date and releasing user
 ```
 
 ---
 
-## 👤 People Management
+## Authentication and Security
 
-The People module manages the personal data used throughout the system.
+### Authentication flow
 
-Stored information includes:
-
-- National number
-- First, second, third, and last names
-- Date of birth
-- Gender
-- Address
-- Phone
-- Email
-- Nationality
-- Image path
-
-The database enforces uniqueness for the national number.
-
----
-
-## 🔐 User Management & Security
-
-The system provides user-account management with:
-
-- Unique usernames
-- Active/inactive user status
-- User-to-person relationship
-- Login using username and password through `POST /api/Auth/login`
-- User-related database operations
-- Password hashing with BCrypt
-- JWT access tokens for protected API requests
-- Refresh tokens for renewing authenticated sessions
-- Logout and refresh-token revocation
-
-### JWT Authentication Flow
-
-The client uses separate HTTP clients for authentication and protected API calls. The protected client adds the current bearer token to each request. When an API request returns `401 Unauthorized`, the client attempts a synchronized refresh and retries the request once.
+1. The login form sends credentials to `POST /api/Auth/login`.
+2. The API records the login attempt and verifies the account and BCrypt password hash.
+3. A successful login creates a short-lived JWT access token and a longer-lived refresh token.
+4. `BearerTokenHandler` attaches the access token to protected API requests.
+5. If a request receives `401 Unauthorized`, the client synchronously attempts a refresh.
+6. The refresh endpoint rotates the refresh token and returns a new access/refresh pair.
+7. Logout revokes the supplied refresh token and the client clears its session.
 
 ```text
 Login
   ↓
 Access token + refresh token
   ↓
-Bearer token on protected API requests
+Bearer authorization header
   ↓
 Access token expires
   ↓
-Rotate refresh token
+Refresh token rotation
   ↓
-Retry the original request
+Retry original request
 ```
 
-The API exposes the following authentication endpoints:
+### Authentication endpoints
 
-| Endpoint | Purpose | Authentication |
+| Endpoint | Method | Description |
 |---|---|---|
-| `POST /api/Auth/login` | Validate credentials and issue access/refresh tokens. | Anonymous |
-| `POST /api/Auth/refresh` | Rotate a valid refresh token and issue new tokens. | Anonymous |
-| `POST /api/Auth/logout` | Revoke the supplied refresh token. | Anonymous |
+| `/api/Auth/login` | `POST` | Authenticate a user and issue tokens |
+| `/api/Auth/refresh` | `POST` | Rotate a refresh token and issue new tokens |
+| `/api/Auth/logout` | `POST` | Revoke a refresh token |
 
-All other controller actions require a valid JWT by default. Login, refresh, and logout are explicitly anonymous and protected by dedicated fixed-window rate-limit policies. Swagger documents the Bearer token security scheme for authorized operations.
+### Security controls
 
-### Password Security
+- BCrypt password hashing and verification.
+- JWT issuer, audience, lifetime, signing-key, and HMAC SHA-256 validation.
+- No expiration bypass or zero clock skew.
+- Configurable access-token and refresh-token lifetimes.
+- Refresh-token hashes stored rather than plaintext token values.
+- Refresh-token replacement, expiry, and revocation records.
+- Login, refresh, logout, and global fixed-window rate limits.
+- CORS allowlist for configured client origins.
+- HTTPS redirection and HSTS outside development.
+- Swagger Bearer security metadata.
+- A default authorization fallback for non-anonymous controller actions.
 
-Passwords are hashed with **BCrypt** before being stored and verified. Plain-text passwords are not used for database comparisons.
+The JWT signing key must be configured as a secret and must contain at least 32 UTF-8 bytes. Never commit a production signing key or database credential.
 
 ---
 
-## 📝 Application Management
+## API Surface
 
-The system uses a general `Application` entity as the foundation for many department workflows.
+The API is organized by domain controllers.
 
-Each application contains:
+| Controller | Domain |
+|---|---|
+| `AuthController` | Login, refresh, and logout |
+| `PeopleController` | People CRUD and existence searches |
+| `UsersController` | Account management, activation, and password changes |
+| `ApplicationsController` | General applications |
+| `ApplicationTypesController` | Application types and fees |
+| `CountriesController` | Country and nationality data |
+| `DriversController` | Driver registration and lists |
+| `LicenseClassController` | License classes and requirements |
+| `LicensesController` | License creation, history, and deactivation |
+| `LocalLicenseController` | Local application and issuance operations |
+| `InternationalLicenseController` | International license applications and history |
+| `DetainLicenseController` | Detention and release operations |
+| `TestTypesController` | Test definitions and fees |
+| `TestAppointmetsController` | Appointment scheduling and updates |
+| `TestsController` | Test result recording |
 
-- Applicant
-- Application date
-- Application type
-- Application status
-- Last status date
-- Paid fees
-- Creating user
-
-Application statuses are represented in the database as:
+In development, Swagger UI is available from the API application's Swagger route, typically:
 
 ```text
-1 = New
-2 = Cancelled
-3 = Completed
+https://localhost:<API_PORT>/swagger
 ```
 
-Application types are stored separately, allowing their titles and fees to be managed independently.
-
 ---
 
-## 🚗 Driving License Classes
+## Database
 
-The `LicenseClass` table defines the different categories of driving licenses.
+The SQL Server database is restored from [`Database/database.sql`](./Database/database.sql). The script contains the database schema, sample/reference data, relationships, constraints, views, and procedures.
 
-Each class contains:
+### Principal entities
 
-- Class name
-- Description
-- Minimum allowed age
-- Default validity period
-- Fees
+| Entity | Purpose |
+|---|---|
+| `People` | Personal and identity information |
+| `Countries` | Nationality reference data |
+| `Users` | System accounts and active status |
+| `Application` | General application lifecycle |
+| `ApplicationTypes` | Application categories and fees |
+| `LicenseClass` | License classes, age requirements, validity, and fees |
+| `Driver` | Person-to-driver registration |
+| `LocalDrivingLicense` | Local application-to-license-class relationship |
+| `Licenses` | Issued local licenses |
+| `InternationalLicenses` | International license records |
+| `TestType` | Available test types |
+| `TestAppointment` | Scheduled tests and retakes |
+| `Tests` | Test results |
+| `DetainedLicenses` | Detention and release records |
+| `RefreshTokens` | Refresh-token family, expiry, rotation, and revocation |
+| `LoginAttempts` | Authentication attempt audit data |
 
-This allows the system to apply different requirements and fees depending on the selected license class.
+The EF Core `AppDbContext` maps the current domain entities and database relationships. The database also provides views such as `Driver_View` and `LocalDrivingLicenseApplications` for reporting-style reads.
 
----
-
-## 🚘 Drivers
-
-A person can be registered as a driver.
-
-The `Driver` entity keeps track of:
-
-- Driver ID
-- Person
-- Creating user
-- Creation date
-
-The database also provides a driver view that combines driver and personal information and calculates the number of active licenses.
-
----
-
-## 🪪 Local Driving Licenses
-
-The local driving-license workflow connects several parts of the database:
+### Database flow
 
 ```text
-Person
-   ↓
-Application
-   ↓
-Local Driving License Application
-   ↓
-License Class
-   ↓
-Tests & Appointments
-   ↓
-Driver
-   ↓
-Local License
+People ──┬── Users
+         ├── Applications ──┬── Local driving licenses
+         │                  ├── Test appointments ── Tests
+         │                  ├── Local licenses
+         │                  └── International licenses
+         └── Drivers ──────── Licenses
+                              └── Detained licenses
 ```
 
-The system supports operations such as:
-
-- Creating a local driving-license application.
-- Checking whether the person already has an application for the same class.
-- Scheduling tests.
-- Recording test results.
-- Tracking test attempts.
-- Issuing the license after completing the required workflow.
-- Renewing licenses.
-- Replacing lost or damaged licenses.
-- Deactivating licenses.
-- Viewing license history.
-
 ---
 
-## 🧪 Driving Tests
+## Getting Started
 
-The test subsystem consists of:
+### Prerequisites
 
-### Test Types
-
-Each test type has:
-
-- Title
-- Description
-- Fees
-
-### Test Appointments
-
-Appointments contain:
-
-- Test type
-- Local driving-license application
-- Appointment date
-- Fees
-- Lock status
-- Optional retake application
-- Creating user
-
-### Tests
-
-The actual test result contains:
-
-- Test appointment
-- Result
-- Notes
-- Creating user
-
-The system can also determine:
-
-- Number of attempts.
-- Number of passed tests.
-- Latest test result.
-- Whether an appointment is locked.
-- Whether an active appointment already exists.
-
-When a test is recorded, the related appointment is locked through a database transaction.
-
----
-
-## 🌍 International Driving Licenses
-
-The system supports issuing and managing international driving licenses.
-
-An international license is connected to:
-
-- Driver
-- Application
-- Local license used for issuance
-- Issue date
-- Expiration date
-- Active status
-- Creating user
-
-The database automatically evaluates whether an international license is still active based on its expiration date.
-
----
-
-## 🚔 Detained Licenses
-
-The system supports license detention and release workflows.
-
-A detained license stores:
-
-- License ID
-- Detention date
-- Detention fees
-- Creating user
-- Release status
-- Release date
-- Releasing user
-- Release application
-
-The release process is handled transactionally:
-
-```text
-Create Release Application
-          ↓
-Validate Detained License
-          ↓
-Mark License as Released
-          ↓
-Store Release Date/User/Application
-```
-
-If an operation fails, the transaction is rolled back.
-
----
-
-## 🗃️ Database Views
-
-The database includes views to simplify complex queries and provide ready-to-display data.
-
-### `Driver_View`
-
-Combines:
-
-- Driver information
-- Person information
-- National number
-- Full name
-- Creation date
-- Number of active licenses
-
-### `LocalDrivingLicenseApplications`
-
-Combines:
-
-- Local application ID
-- Driving class
-- National number
-- Full name
-- Application date
-- Number of passed tests
-- Application status
-
-This keeps frequently used reporting/query logic inside the database rather than duplicating it across the application.
-
----
-
-## ⚙️ Stored Procedures
-
-The database uses stored procedures extensively for CRUD operations, searching, validation, and business workflows.
-
-Examples include:
-
-- Creating and updating people.
-- Creating and updating users.
-- Creating applications.
-- Creating drivers.
-- Creating local driving-license applications.
-- Creating local licenses.
-- Creating international licenses.
-- Creating test appointments.
-- Recording tests.
-- Searching for people, drivers, licenses, users, and applications.
-- Checking whether records already exist.
-- Counting test attempts.
-- Checking passed tests.
-- Detaining and releasing licenses.
-- Managing login attempts and refresh-token lifecycle data.
-- Updating and deactivating licenses.
-
-Stored procedures also use:
-
-- Parameters
-- Output parameters
-- `SCOPE_IDENTITY()`
-- Transactions
-- `TRY...CATCH`
-- Custom SQL errors
-- Validation checks
-
----
-
-## 🔄 Transactional Operations
-
-Critical workflows use SQL Server transactions to maintain database consistency.
-
-Examples include:
-
-- Creating a local driving-license application.
-- Issuing a license.
-- Creating an international license.
-- Releasing a detained license.
-- Recording a test and locking its appointment.
-- Rotating and revoking refresh tokens.
-- Updating related application/license information.
-
-For example:
-
-```text
-BEGIN TRANSACTION
-      ↓
-Perform related operations
-      ↓
-Everything succeeds?
-   ↙          ↘
- YES           NO
-  ↓             ↓
-COMMIT       ROLLBACK
-```
-
-This prevents partially completed operations from leaving the database in an inconsistent state.
-
----
-
-## 🧩 Technology Stack
-
-### Client
-
-- C#
-- Windows Forms
-- .NET
-- `HttpClient`
-- REST API communication
-- DTOs
-- Async/Await
-
-### Server
-
-- C#
-- ASP.NET Core Web API
-- .NET 8
-- RESTful APIs
-- DTOs
-- Business Layer
-- Data Access Layer
-- Dependency Injection
-- Async/Await
-
-### Database
-
+- Windows 10 or 11 for the WinForms client
+- Visual Studio 2022 or the .NET 8 SDK
 - Microsoft SQL Server
-- T-SQL
-- ADO.NET
-- Stored Procedures
-- Views
-- Foreign Keys
-- Transactions
-- Constraints
+- SQL Server Management Studio or another SQL Server client
+- IIS Express or the ASP.NET Core HTTPS development certificate
 
-### Security
-
-- BCrypt password hashing
-- JWT bearer authentication
-- Refresh-token rotation and revocation
-- Active/inactive user accounts
-- Parameterized database commands
-- Login, refresh, logout, and global API rate limiting
-
----
-
-## 📁 Project Structure
-
-A simplified representation of the solution structure:
-
-```text
-DVLD
-│
-├── DVLD.WinForms
-│   ├── Forms
-│   ├── Controls
-│   ├── Services
-│   ├── Helpers
-│   └── Resources
-│
-├── DVLD.API
-│   ├── Controllers
-│   └── Configuration
-│
-├── DVLD.Business
-│   └── Business Services
-│
-├── DVLD.DataAccess
-│   └── SQL / ADO.NET Data Access
-│
-├── DVLD.DTOs
-│   └── Request / Response DTOs
-│
-├── DVLD.Shared
-│   └── Shared Entities / Enums
-│
-└── Database
-    └── database.sql
-```
-
----
-
-## 🚀 Getting Started
+> The WinForms project targets `net8.0-windows`, so it is intended to run on Windows.
 
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/adhamgomaa/DVLD-v2.git
+cd DVLD-v2
 ```
 
-### 2. Restore the database
+### 2. Restore the SQL Server database
 
-Open the provided SQL database script:
-
-```text
-database.sql
-```
-
-Execute it using SQL Server Management Studio.
-
-The script creates:
-
-- Database
-- Tables
-- Relationships
-- Constraints
-- Views
-- Stored Procedures
+1. Open [`Database/database.sql`](./Database/database.sql) in SQL Server Management Studio.
+2. Confirm that the script is targeting the intended SQL Server instance.
+3. Execute the script to create or update the DVLD database.
 
 ### 3. Configure the API
 
-Update the API connection string in the server configuration and provide a JWT signing key through user secrets or an environment variable. The signing key must contain at least 32 UTF-8 bytes and should not be committed to source control.
+Set the SQL Server connection string and JWT settings in environment variables or ASP.NET Core user secrets.
 
-Example:
+Using user secrets:
+
+```bash
+dotnet user-secrets init --project DVLD.Server/DVLD.API
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=YOUR_SERVER;Database=DVLD;Trusted_Connection=True;TrustServerCertificate=True;" --project DVLD.Server/DVLD.API
+dotnet user-secrets set "Jwt:SigningKey" "replace-with-a-random-secret-at-least-32-utf8-bytes" --project DVLD.Server/DVLD.API
+```
+
+Default JWT settings:
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=YOUR_SERVER;Database=DVLD;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
   "Jwt": {
     "Issuer": "DVLD.API",
     "Audience": "DVLD.Client",
@@ -711,17 +424,15 @@ Example:
 }
 ```
 
-Set the signing key with an environment variable, for example:
+The API validates the signing key and token durations during startup and exits with an explicit configuration error when they are invalid.
 
-```bash
-export Jwt__SigningKey="replace-with-a-random-secret-at-least-32-bytes-long"
-```
+### 4. Configure CORS
 
-The API fails fast when the connection string or JWT signing key is missing or invalid.
+The API's CORS allowlist is controlled with `Cors:AllowedOrigins`. Add the exact WinForms/API origin entries only when the client or hosting configuration requires them.
 
-### 4. Configure the WinForms client
+### 5. Configure the WinForms client
 
-Update the API base URL in [`DVLD.Client/DVLD.WinForms/appsettings.json`](DVLD.Client/DVLD.WinForms/appsettings.json) so that the desktop application can communicate with the running ASP.NET Core API:
+The client reads its API URL from [`DVLD.Client/DVLD.WinForms/appsettings.json`](./DVLD.Client/DVLD.WinForms/appsettings.json):
 
 ```json
 {
@@ -731,135 +442,54 @@ Update the API base URL in [`DVLD.Client/DVLD.WinForms/appsettings.json`](DVLD.C
 }
 ```
 
-The client starts at the login screen, stores tokens only for the current application session, refreshes expired access tokens, and clears the session on logout or failed token refresh.
-
-### 5. Run the API
-
-Start the ASP.NET Core Web API project.
-
-### 6. Run the WinForms Client
-
-Start the desktop client after the API is running.
+Update `BaseUrl` if Visual Studio assigns a different HTTPS port.
 
 ---
 
-## 🎯 Main Features
+## Running the Projects
 
-- 👤 People Management
-- 👨‍💼 User Management
-- 🔐 Authentication
-- 🔑 BCrypt Password Hashing
-- 🎫 JWT Access and Refresh Tokens
-- 🔄 Automatic Access-Token Refresh
-- 📝 Application Management
-- 🚗 Driver Management
-- 🪪 Local Driving License Management
-- 🌍 International License Management
-- 🚔 Detained License Management
-- 🧪 Driving Test Management
-- 📅 Test Appointment Scheduling
-- 🔄 License Renewal
-- ♻️ Lost/Damaged License Replacement
-- 📋 License History
-- 🔎 Search & Filtering
-- 💰 Application and License Fees
-- 📊 Database Views
-- ⚙️ Stored Procedures
-- 🔄 Transactional Business Operations
-- 🌐 RESTful API Communication
-- 🛡️ API Authorization and Rate Limiting
+### Run with Visual Studio
 
----
+1. Open [`DVLD.Server/DVLD.Server.sln`](./DVLD.Server/DVLD.Server.sln).
+2. Run `DVLD.API` with the HTTPS launch profile.
+3. Open [`DVLD.Client/DVLD.Client.sln`](./DVLD.Client/DVLD.Client.sln).
+4. Confirm the API URL in `appsettings.json`.
+5. Start `DVLD.WinForms`.
 
-## 💡 Key Technical Highlights
+### Run the API from the terminal
 
-This project demonstrates practical experience with:
-
-- Designing a relational database from a real-world domain.
-- Modeling complex relationships using foreign keys.
-- Building a multi-layered application.
-- Separating the desktop UI from database access using a Web API.
-- Designing DTOs for client/server communication.
-- Using ADO.NET for database access.
-- Writing and consuming SQL Server stored procedures.
-- Implementing transactional business workflows.
-- Handling asynchronous API/database operations.
-- Applying validation and business rules.
-- Managing JWT authentication, refresh-token rotation, and password hashing.
-- Building reusable WinForms components and services.
-
----
-
-## 📌 Database Design Highlights
-
-The database enforces important integrity rules, including:
-
-- Primary keys for all major entities.
-- Foreign-key relationships between related entities.
-- Unique national numbers.
-- Unique usernames.
-- Default application status.
-- Nullable release information for detained licenses.
-- Referential relationships between applications, people, drivers, licenses, and tests.
-
-For example, the `People` table enforces a unique constraint on `NationalNo`, while `Users` enforces a unique constraint on `Username`.
-
----
-
-## 🧠 Business Workflow Example
-
-A typical local driving-license workflow can be represented as:
-
-```text
-Register Person
-      ↓
-Create Driving Application
-      ↓
-Select License Class
-      ↓
-Schedule Required Tests
-      ↓
-Take Tests
-      ↓
-Record Results
-      ↓
-Complete Application
-      ↓
-Register Driver
-      ↓
-Issue Local Driving License
-      ↓
-Manage / Renew / Replace License
+```bash
+cd DVLD.Server
+dotnet restore DVLD.Server.sln
+dotnet run --project DVLD.API/DVLD.API.csproj
 ```
 
-The system also supports additional workflows such as international license issuance and detained-license release.
+### Run the client from Windows
+
+```powershell
+cd DVLD.Client
+dotnet restore DVLD.Client.sln
+dotnet run --project DVLD.WinForms/DVLD.WinForms.csproj
+```
+
+Ensure SQL Server is running and accessible before starting the API.
 
 ---
 
-## 🔒 Security Note
-
-Passwords should never be stored as plain text.
-
-This project hashes passwords using **BCrypt** before storing them in the database. API access is protected by signed JWT bearer tokens. Configure the JWT signing key through a secret-management mechanism such as ASP.NET Core user secrets or an environment variable; do not commit it to `appsettings.json`.
-
----
-
-## 📄 License
-
-This project is intended for educational and portfolio purposes.
-
----
-
-## 👨‍💻 Author
+## Author
 
 **Adham Gomaa**
 
-Technologies of interest:
+- C# and .NET
+- ASP.NET Core Web API
+- Windows Forms
+- Entity Framework Core
+- Microsoft SQL Server
+- REST API design
+- Authentication and application security
 
-- C#
-- .NET
-- ASP.NET Core
-- WinForms
-- SQL Server
-- REST APIs
-- ADO.NET
+---
+
+## License
+
+This project is intended for educational and portfolio use.

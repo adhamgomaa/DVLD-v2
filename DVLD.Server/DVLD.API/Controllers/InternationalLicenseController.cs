@@ -1,10 +1,8 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.InternationalLicense;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
 
 namespace DVLD.API.Controllers
 {
@@ -86,7 +84,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding License" });
 
-            return CreatedAtRoute("GetInternationalLicenseById", new { id = newLicense.InternationalID }, InternationalMapper.ToLicenseDto(newLicense));
+            return CreatedAtRoute("GetInternationalLicenseById", new { internationalId = newLicense.InternationalLicenseId }, InternationalMapper.ToLicenseDto(newLicense));
         }
     }
 }

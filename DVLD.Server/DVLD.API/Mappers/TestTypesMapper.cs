@@ -1,6 +1,5 @@
-﻿using DVLD.DTOs.ApplicationTypes;
-using DVLD.DTOs.TestTypes;
-using DVLD.Shared.Entities;
+﻿using DVLD.DTOs.TestTypes;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {

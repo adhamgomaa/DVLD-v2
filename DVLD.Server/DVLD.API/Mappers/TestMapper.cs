@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.Tests;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -10,20 +10,20 @@ namespace DVLD.API.Mappers
             return new TestDto
             {
                 TestId = test.TestId,
-                AppointmentID = test.AppointmentID,
+                AppointmentID = test.TestAppointmentId,
                 Notes = test.Notes,
-                Result = test.Result,
-                UserId = test.UserId
+                Result = test.TestResult,
+                UserId = test.CreatedByUserId
             };
         }
         public static Test ToTest(CreateTestDto createTest)
         {
             return new Test
             {
-                AppointmentID = createTest.AppointmentID,
+                TestAppointmentId = createTest.AppointmentID,
                 Notes = createTest.Notes,
-                Result = createTest.Result,
-                UserId = createTest.UserId
+                TestResult = createTest.Result,
+                CreatedByUserId = createTest.UserId
             };
         }
     }

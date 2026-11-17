@@ -12,10 +12,5 @@ namespace DVLD.DTOs.LocalLicense
     {
         [Required]
         public int ClassId { get; set; }
-        public UpdateLocalLicenseDto()
-        {
-            ClassId = -1;
-            
-        }
     }
 }

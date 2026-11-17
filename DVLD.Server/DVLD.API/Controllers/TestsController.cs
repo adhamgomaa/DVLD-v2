@@ -1,11 +1,9 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Tests;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DVLD.API.Controllers
 {
@@ -54,7 +52,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Test" });
 
-            return CreatedAtRoute("GetTestById", new { id = newTest.AppointmentID }, TestMapper.ToGetDto(newTest));
+            return CreatedAtRoute("GetTestById", new { id = newTest.TestAppointmentId }, TestMapper.ToGetDto(newTest));
         }
 
         [HttpPut("{id}", Name = "UpdateTest")]
@@ -70,11 +68,11 @@ namespace DVLD.API.Controllers
             Test? test = await service.FindTestAsync(id, cancellationToken);
             if (test == null) return NotFound($"There's no test with this Id: {id}");
 
-            test.AppointmentID = updateTest.AppointmentID;
-            test.Result = updateTest.Result;
+            test.TestAppointmentId = updateTest.AppointmentID;
+            test.TestResult = updateTest.Result;
             test.Notes = updateTest.Notes;
-            test.UserId = updateTest.UserId;
-           
+            test.CreatedByUserId = updateTest.UserId;
+
             bool result = await service.UpdateTestAsync(test, cancellationToken);
             if (result) return Ok(updateTest);
             else return StatusCode(500, new { message = "Error Updating Test" });

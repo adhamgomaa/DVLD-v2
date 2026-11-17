@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.TestAppointment;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -9,36 +9,36 @@ namespace DVLD.API.Mappers
         {
             return new AppointmentDto
             {
-                AppointmentId = test.AppointmentId,
-                Date = test.Date,
+                AppointmentId = test.TestAppointmentId,
+                Date = test.AppointmentDate,
                 IsLocked = test.IsLocked,
-                Fees = test.Fees
+                Fees = test.PaidFees
             };
         }
         public static GetAppointmentDto ToGetDto(TestAppointment test)
         {
             return new GetAppointmentDto
             {
-                AppointmentId = test.AppointmentId,
-                RetakeApplicationId = test.RetakeApplicationId,
-                Date = test.Date,
+                AppointmentId = test.TestAppointmentId,
+                RetakeApplicationId = test.RetakeTestApplicationId,
+                Date = test.AppointmentDate,
                 IsLocked = test.IsLocked,
-                LocalId = test.LocalId,
+                LocalId = test.LocalDrivingLicenseId,
                 TestTypeId = test.TestTypeId,
-                Fees = test.Fees,
-                UserId = test.UserId
+                Fees = test.PaidFees,
+                UserId = test.CreatedByUserId
             };
         }
         public static TestAppointment ToApp(CreateAppointmentDto createTest)
         {
             return new TestAppointment
             {
-                RetakeApplicationId = createTest.RetakeApplicationId,
-                Date = createTest.Date,
-                LocalId= createTest.LocalId,
+                RetakeTestApplicationId = createTest.RetakeApplicationId,
+                AppointmentDate = createTest.Date,
+                LocalDrivingLicenseId = createTest.LocalId,
                 TestTypeId = createTest.TestTypeId,
-                Fees = createTest.Fees,
-                UserId = createTest.UserId
+                PaidFees = createTest.Fees,
+                CreatedByUserId = createTest.UserId
             };
         }
     }

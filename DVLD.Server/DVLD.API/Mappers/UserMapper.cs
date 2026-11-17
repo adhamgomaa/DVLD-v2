@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.Users;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -23,7 +23,7 @@ namespace DVLD.API.Mappers
             {
                 UserId = user.UserId,
                 PersonId = user.PersonId,
-                UserName = user.UserName,
+                UserName = user.Username,
                 IsActive = user.IsActive
             };
         }
@@ -32,7 +32,7 @@ namespace DVLD.API.Mappers
         {
             return new User
             {
-                UserName = createUser.UserName,
+                Username = createUser.UserName,
                 IsActive = createUser.IsActive,
                 Password = createUser.Password,
                 PersonId = createUser.PersonId

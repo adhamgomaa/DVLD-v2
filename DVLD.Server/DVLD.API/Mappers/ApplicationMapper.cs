@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.Applications;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -9,26 +9,26 @@ namespace DVLD.API.Mappers
         {
             return new GetAppDto
             {
-                AppID = app.AppID,
-                PersonId = app.PersonId,
-                AppDate = app.AppDate,
-                AppStatus = app.AppStatus,
-                Type = app.Type,
-                Fees = app.Fees,
-                StatusDate = app.StatusDate,
-                UserId = app.UserId
+                AppID = app.ApplicationId,
+                PersonId = app.ApplicantPersonId,
+                AppDate = app.ApplicationDate,
+                AppStatus = app.ApplicationStatus,
+                Type = app.ApplicationTypeId,
+                Fees = app.PaidFees,
+                StatusDate = app.LastStatusDate,
+                UserId = app.CreatedByUserId
             };
         }
         public static Application ToApp(CreateAppDto createApp)
         {
             return new Application
             {
-                PersonId = createApp.PersonId,
-                AppStatus = createApp.AppStatus,
-                Type = createApp.Type,
-                Fees = createApp.Fees,
-                StatusDate = createApp.StatusDate,
-                UserId = createApp.UserId
+                ApplicantPersonId = createApp.PersonId,
+                ApplicationStatus = createApp.AppStatus,
+                ApplicationTypeId = createApp.Type,
+                PaidFees = createApp.Fees,
+                LastStatusDate = createApp.StatusDate,
+                CreatedByUserId = createApp.UserId
             };
         }
     }

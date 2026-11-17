@@ -1,6 +1,8 @@
+using DVLD.DataAccess.Data;
 using DVLD.DataAccess.Interfaces;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,76 +12,25 @@ using System.Threading.Tasks;
 
 namespace DVLD.DataAccess.Implementations
 {
-    public sealed class CountryData(DatabaseSettings databaseSettings) : ICountryData
+    public sealed class CountryData(AppDbContext context) : ICountryData
     {
-        private static Country MapCountry(SqlDataReader reader)
-        {
-            return new Country
-                    (
-                        reader.GetInt32(reader.GetOrdinal("CountryID")),
-                        reader.GetString(reader.GetOrdinal("CountryName"))
-
-                    );
-        }
         public async Task<Country?> FindCountryAsync(int countryId, CancellationToken cancellationToken)
         {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_FindCountryById", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@countryId", SqlDbType.Int).Value = countryId;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                if (!await reader.ReadAsync(cancellationToken))
-                    return null;
-                return MapCountry(reader);
-            }
-            catch (SqlException)
-            {
-                return null;
-            }
+            var country = await context.Countries.FindAsync([countryId], cancellationToken);
+            return country;
         }
         public async Task<Country?> FindCountryAsync(string countryName, CancellationToken cancellationToken)
         {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_FindCountryByName", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@name", SqlDbType.NVarChar).Value = countryName;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                if (!await reader.ReadAsync(cancellationToken))
-                    return null;
-                return MapCountry(reader);
-            }
-            catch (SqlException)
-            {
-                return null;
-            }
+            var country = await context.Countries
+                                .AsNoTracking()
+                                .SingleOrDefaultAsync(c => c.CountryName == countryName, cancellationToken);
+            return country;
         }
 
         public async Task<List<Country>> GetCountriesAsync(CancellationToken cancellationToken)
         {
-            List<Country> list = new List<Country>();
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_GetAllCountries", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                while (await reader.ReadAsync())
-                {
-                    list.Add(MapCountry(reader));
-                }
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return list;
+            var countries = await context.Countries.AsNoTracking().ToListAsync(cancellationToken);
+            return countries;
         }
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using DVLD.DTOs.Auth;
 using DVLD.API.Interfaces;

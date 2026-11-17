@@ -1,8 +1,7 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Drivers;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers
@@ -15,7 +14,7 @@ namespace DVLD.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<DriverDto>>> GetAllDrivers(CancellationToken cancellationToken)
         {
-            List<DriverInfo> drivers = await service.ListDriversAsync(cancellationToken);
+            List<DriverView> drivers = await service.ListDriversAsync(cancellationToken);
             var driverDto = drivers.Select(DriverMapper.ToDriverDto).ToList();
             return Ok(driverDto);
         }
@@ -74,7 +73,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Driver" });
 
-            return CreatedAtRoute("GetDriverById", new { id = newDriver.DriverID }, DriverMapper.ToGetDto(newDriver));
+            return CreatedAtRoute("GetDriverById", new { id = newDriver.DriverId }, DriverMapper.ToGetDto(newDriver));
         }
     }
 }

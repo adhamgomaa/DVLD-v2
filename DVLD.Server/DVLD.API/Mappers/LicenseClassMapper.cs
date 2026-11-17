@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.LicenseClass;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -9,12 +9,12 @@ namespace DVLD.API.Mappers
         {
             return new LicenseClassDto
             {
-                Length = license.Length,
-                Age = license.Age,
-                Description = license.Description,
-                ClassId = license.ClassId,
+                Length = license.DefaultValidityLength,
+                Age = license.MinimumAllowedAge,
+                Description = license.ClassDescription,
+                ClassId = license.LicenseClassId,
                 ClassName = license.ClassName,
-                Fees = license.Fees
+                Fees = license.ClassFees
             };
         }
     }

@@ -5,21 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DVLD.DTOs.TestTypes
-{
-    public class TestTypesDto
-    {
-        public TestTypeEnum TestTypeId { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public decimal Fees { get; set; }
+namespace DVLD.DTOs.TestTypes;
 
-        public TestTypesDto()
-        {
-            TestTypeId = TestTypeEnum.VisionTest;
-            Title = string.Empty;
-            Description = string.Empty;
-            Fees = 0;
-        }
-    }
+public class TestTypesDto
+{
+    public TestTypeEnum TestTypeId { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public decimal Fees { get; set; }
 }
+

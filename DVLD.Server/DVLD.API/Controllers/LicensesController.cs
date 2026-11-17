@@ -1,8 +1,7 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Licenses;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers
@@ -51,16 +50,26 @@ namespace DVLD.API.Controllers
             return Ok(result);
         }
         
-        [HttpGet("license-id-by-national-number/{nationalNo}", Name = "GetLicenseIdByNationalNumber")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<int>> GetLicenseIdByNationalNumber(string nationalNo, CancellationToken cancellationToken)
-        {
-            int result = await service.GetLicenseIDAsync(nationalNo, cancellationToken);
-            if (result == -1)
-                return NotFound("There's no license with this nationalNo");
+        // [HttpGet("license-id-by-national-number/{nationalNo}", Name = "GetLicenseIdByNationalNumber")]
+        // [ProducesResponseType(StatusCodes.Status200OK)]
+        // [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // //Must Edit
+        // public async Task<ActionResult<int>> GetLicenseIdByNationalNumber(string nationalNo, CancellationToken cancellationToken)
+        // {
+        //     int result = await service.GetLicenseIDAsync(nationalNo, cancellationToken);
+        //     if (result == -1)
+        //         return NotFound("There's no license with this nationalNo");
 
-            return Ok(result);
+        //     return Ok(result);
+        // }
+
+        [HttpGet("by-national-number/{nationalNo}", Name = "GetAllLicensesByNationalNumber")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<LicenseHistoryDto>>> GetAllLicensesByNationalNumber(string nationalNo, CancellationToken cancellationToken)
+        {
+            List<LicenseHistory> licenses = await service.GetLicensesByNationalNoAsync(nationalNo, cancellationToken);
+            var licenseDto = licenses.Select(LicenseMapper.ToLicenseDto).ToList();
+            return Ok(licenseDto);
         }
 
         [HttpGet("deactivate/{licenseId}", Name = "DeactivateLicense")]
@@ -103,7 +112,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding License" });
 
-            return CreatedAtRoute("GetLicenseById", new { id = newLicense.LicenseID }, LicenseMapper.ToGetDto(newLicense));
+            return CreatedAtRoute("GetLicenseById", new { id = newLicense.LicenseId }, LicenseMapper.ToGetDto(newLicense));
         }
 
         [HttpPut("{licenseId}", Name = "UpdateLicense")]
@@ -119,15 +128,15 @@ namespace DVLD.API.Controllers
             License? license = await service.FindLicenseAsync(licenseId, cancellationToken);
             if (license == null) return NotFound($"There's no license with this Id: {licenseId}");
 
-            license.AppID = updateLicense.AppID;
-            license.ExpiredDate = updateLicense.ExpiredDate;
+            license.ApplicationId = updateLicense.AppID;
+            license.ExpirationDate = updateLicense.ExpiredDate;
             license.Notes = updateLicense.Notes;
-            license.DriverID = updateLicense.DriverID;
+            license.DriverId = updateLicense.DriverID;
             license.IsActive = updateLicense.IsActive;
             license.IssueReason = updateLicense.IssueReason;
-            license.Fees = updateLicense.Fees;
-            license.UserID = updateLicense.UserID;
-            license.ClassID = updateLicense.ClassID;
+            license.PaidFees = updateLicense.Fees;
+            license.CreatedByUserId = updateLicense.UserID;
+            license.LicenseClassId = updateLicense.ClassID;
 
             bool result = await service.UpdateLicenseAsync(license, cancellationToken);
             if (result) return Ok(updateLicense);

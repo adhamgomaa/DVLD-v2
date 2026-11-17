@@ -1,305 +1,171 @@
+using DVLD.DataAccess.Data;
 using DVLD.DataAccess.Interfaces;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace DVLD.DataAccess.Implementations
 {
-    public sealed class LocalDrivingLicenseData(DatabaseSettings databaseSettings) : ILocalDrivingLicenseData
+    public sealed class LocalDrivingLicenseData(AppDbContext context) : ILocalDrivingLicenseData
     {
-        private static LocalLicense MapLocalLicense(SqlDataReader reader)
+        public async Task<int> AddNewLocalAsync(LocalDrivingLicense newLocalLicense, CancellationToken cancellationToken)
         {
-            return new LocalLicense
-                (
-                    reader.GetInt32(reader.GetOrdinal("LocalDrivingLicenseApplicationID")),
-                    reader.GetInt32(reader.GetOrdinal("ApplicationID")),
-                    reader.GetInt32(reader.GetOrdinal("LicenseClassID"))
-                );
-        }
-        public async Task<int> AddNewLocalAsync(LocalLicense newLocalLicense, CancellationToken cancellationToken)
-        {
-            int localId = -1;
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_CreateNewLocalDrivingLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@personId", SqlDbType.Int).Value = newLocalLicense.PersonId;
-                command.Parameters.Add("@appType", SqlDbType.Int).Value = (int)newLocalLicense.Type;
-                command.Parameters.Add("@status", SqlDbType.TinyInt).Value = (byte)newLocalLicense.AppStatus;
-                command.Parameters.Add("@statusDate", SqlDbType.DateTime).Value = newLocalLicense.StatusDate;
-                command.Parameters.Add("@fees", SqlDbType.Decimal).Value = newLocalLicense.Fees;
-                command.Parameters.Add("@userId", SqlDbType.Int).Value = newLocalLicense.UserId;
-                command.Parameters.Add("@classId", SqlDbType.Int).Value = newLocalLicense.ClassId;
-                SqlParameter outputId = new SqlParameter("@localId", SqlDbType.Int)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(outputId);
-                await connection.OpenAsync(cancellationToken);
-                await command.ExecuteNonQueryAsync(cancellationToken);
-                localId = outputId.Value == DBNull.Value ? -1 : (int)outputId.Value;
+                context.LocalDrivingLicenses.Add(newLocalLicense);
+                await context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return newLocalLicense.LocalDrivingLicenseApplicationId;
             }
-            catch (SqlException)
+            catch
             {
-                throw;
+                await transaction.RollbackAsync(cancellationToken);
+                return -1;
             }
-            return localId;
         }
 
-        public async Task<bool> UpdateLocalAsync(LocalLicense updateLocalLicense, CancellationToken cancellationToken)
+        public async Task<bool> UpdateLocalAsync(LocalDrivingLicense updateLocalLicense, CancellationToken cancellationToken)
         {
-            int rowAffected = 0;
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_UpdateLocalDrivingLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@personId", SqlDbType.Int).Value = updateLocalLicense.PersonId;
-                command.Parameters.Add("@appDate", SqlDbType.DateTime).Value = updateLocalLicense.AppDate;
-                command.Parameters.Add("@appType", SqlDbType.Int).Value = (int)updateLocalLicense.Type;
-                command.Parameters.Add("@status", SqlDbType.TinyInt).Value = (byte)updateLocalLicense.AppStatus;
-                command.Parameters.Add("@statusDate", SqlDbType.DateTime).Value = updateLocalLicense.StatusDate;
-                command.Parameters.Add("@fees", SqlDbType.Decimal).Value = updateLocalLicense.Fees;
-                command.Parameters.Add("@userId", SqlDbType.Int).Value = updateLocalLicense.UserId;
-                command.Parameters.Add("@appId", SqlDbType.Int).Value = updateLocalLicense.AppId;
-                command.Parameters.Add("@classId", SqlDbType.Int).Value = updateLocalLicense.ClassId;
-                command.Parameters.Add("@localId", SqlDbType.Int).Value = updateLocalLicense.LocalId;
-                await connection.OpenAsync(cancellationToken);
-                rowAffected = await command.ExecuteNonQueryAsync(cancellationToken);
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return rowAffected > 0;
-        }
-
-        public async Task<bool> DeleteLocalAsync(int localId, int appId, CancellationToken cancellationToken)
-        {
-            int rowAffected = 0;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_DeleteLocalDrivingLicense", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@appId", SqlDbType.Int).Value = appId;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localId;
-                await connection.OpenAsync(cancellationToken);
-                rowAffected = await cmd.ExecuteNonQueryAsync(cancellationToken);
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return rowAffected > 0;
-        }
-
-        public async Task<bool> CheckPersonHasSameClassAsync(int personId, int classId, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_CheckPersonHasSameClass", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@personId", SqlDbType.Int).Value = personId;
-                command.Parameters.Add("@classId", SqlDbType.Int).Value = classId;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                if (!await reader.ReadAsync(cancellationToken))
+                var local = await context.LocalDrivingLicenses
+                                .Include(license => license.Application)
+                                .SingleOrDefaultAsync(
+                                    license => license.LocalDrivingLicenseApplicationId == updateLocalLicense.LocalDrivingLicenseApplicationId,
+                                    cancellationToken);
+                if (local is null)
                     return false;
-                return true;
+
+                local.Application.ApplicantPersonId = updateLocalLicense.Application.ApplicantPersonId;
+                local.Application.ApplicationTypeId = updateLocalLicense.Application.ApplicationTypeId;
+                local.Application.ApplicationStatus = updateLocalLicense.Application.ApplicationStatus;
+                local.Application.LastStatusDate = updateLocalLicense.Application.LastStatusDate;
+                local.Application.PaidFees = updateLocalLicense.Application.PaidFees;
+                local.Application.CreatedByUserId = updateLocalLicense.Application.CreatedByUserId;
+                local.LicenseClassId = updateLocalLicense.LicenseClassId;
+
+                int affectedRows = await context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return affectedRows > 0;
             }
-            catch (SqlException)
+            catch
             {
+                await transaction.RollbackAsync(cancellationToken);
                 return false;
             }
         }
 
-        public async Task<List<LocalDrivingApplications>> GetAllLocalLicensesAsync(CancellationToken cancellationToken)
+        public async Task<bool> DeleteLocalAsync(int localId, int appId, CancellationToken cancellationToken)
         {
-            List<LocalDrivingApplications> list = new List<LocalDrivingApplications>();
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_GetAllLocalLicenses", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    list.Add(new LocalDrivingApplications
-                        (
-                            reader.GetInt32(reader.GetOrdinal("L.D.L.AppID")),
-                            reader.GetString(reader.GetOrdinal("Driving Class")),
-                            reader.GetString(reader.GetOrdinal("National No.")),
-                            reader.GetString(reader.GetOrdinal("Full Name")),
-                            reader.GetDateTime(reader.GetOrdinal("ApplicationDate")),
-                            reader.GetInt32(reader.GetOrdinal("Passed Tests")),
-                            reader.GetString(reader.GetOrdinal("Status"))
-                        
-                        ));
-                }
+                var local = await context.LocalDrivingLicenses.FindAsync([localId], cancellationToken);
+                var app = await context.Applications.FindAsync([appId], cancellationToken);
+                if (local is null || app is null)
+                    return false;
+                context.LocalDrivingLicenses.Remove(local);
+                context.Applications.Remove(app);
+
+                int affectedRows = await context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return affectedRows > 0;
             }
-            catch (SqlException)
+            catch
             {
-                throw;
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
             }
-            return list;
+        }
+
+        public async Task<bool> CheckPersonHasSameClassAsync(int personId, int classId, CancellationToken cancellationToken)
+        {
+            bool isTheSame = await context.LocalDrivingLicenses.AsNoTracking()
+                            .AnyAsync(l => l.LicenseClassId == classId && l.Application.ApplicantPersonId == personId
+                            && (l.Application.ApplicationStatus == AppStatusEnum.New || l.Application.ApplicationStatus == AppStatusEnum.Completed),
+                            cancellationToken);
+            return isTheSame;                
+        }
+
+        public async Task<List<LocalDrivingLicenseApplication>> GetAllLocalLicensesAsync(CancellationToken cancellationToken)
+        {
+            var locals = await context.LocalDrivingLicenseApplications.AsNoTracking()
+                            .OrderByDescending(l => l.LDLAppId)
+                            .ToListAsync(cancellationToken);
+            return locals;
         }
 
         public async Task<bool> CancelLicenseAsync(int localLicenseAppID, CancellationToken cancellationToken)
         {
-            int rowAffected = 0;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_CancelLicense", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseAppID;
-                await connection.OpenAsync(cancellationToken);
-                rowAffected = await cmd.ExecuteNonQueryAsync(cancellationToken);
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return rowAffected > 0;
+            var local = await context.LocalDrivingLicenses
+                                        .Include(license => license.Application)
+                                        .SingleOrDefaultAsync(
+                                            license => license.LocalDrivingLicenseApplicationId == localLicenseAppID,
+                                            cancellationToken); 
+            if (local is null)
+                return false;
+            local.Application.ApplicationStatus = AppStatusEnum.Cancelled;
+            local.Application.LastStatusDate = DateTime.Now;
+            return await context.SaveChangesAsync(cancellationToken) > 0;
         }
 
-        public async Task<LocalLicense?> FindLocalLicenseAsync(int localLicenseID, CancellationToken cancellationToken)
+        public async Task<LocalDrivingLicense?> FindLocalLicenseAsync(int localLicenseID, CancellationToken cancellationToken)
         {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_FindLocalDrivingLicenseById", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseID;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = cmd.ExecuteReader();
-                if (!await reader.ReadAsync(cancellationToken))
-                    return null;
-                return MapLocalLicense(reader);
-            }
-            catch (SqlException)
-            {
-                return null;
-            }
+            var local = await context.LocalDrivingLicenses
+                            .Include(license => license.Application)
+                            .SingleOrDefaultAsync(
+                                license => license.LocalDrivingLicenseApplicationId == localLicenseID,
+                                cancellationToken);
+            return local;
         }
 
         public async Task<bool> DoseAttendTestTypeAsync(int localLicenseAppID, TestTypeEnum testTypeID, CancellationToken cancellationToken)
         {
-            bool isFound = false;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_DoesAttendTestType", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseAppID;
-                cmd.Parameters.Add("@testTypeId", SqlDbType.Int).Value = (int)testTypeID;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result != null)
-                    isFound = true;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return isFound;
+            bool isAttend = await context.Tests.AsNoTracking()
+                        .Where(t => t.TestAppointment.LocalDrivingLicense.LocalDrivingLicenseApplicationId == localLicenseAppID &&
+                        t.TestAppointment.TestTypeId == testTypeID)
+                        .AnyAsync(cancellationToken);
+            return isAttend;
         }
 
-        public async Task<byte> TotalTrialsPerTestAsync(int localLicenseAppID, TestTypeEnum testTypeID, CancellationToken cancellationToken)
+        public async Task<int> TotalTrialsPerTestAsync(int localLicenseAppID, TestTypeEnum testTypeID, CancellationToken cancellationToken)
         {
-            byte Totaltrials = 0;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_TotalTrialsPerTest", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseAppID;
-                cmd.Parameters.Add("@testTypeId", SqlDbType.Int).Value = (int)testTypeID;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result != null && byte.TryParse(result.ToString(), out byte Trials))
-                    Totaltrials = Trials;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return Totaltrials;
+            int total = await context.Tests.AsNoTracking()
+                        .Where(t => t.TestAppointment.LocalDrivingLicense.LocalDrivingLicenseApplicationId == localLicenseAppID &&
+                        t.TestAppointment.TestTypeId == testTypeID)
+                        .CountAsync(cancellationToken);
+            return total;
         }
 
         public async Task<bool> IsThereAnActiveScheduleTestAsync(int localLicenseAppID, TestTypeEnum testTypeID, CancellationToken cancellationToken)
         {
-            bool isFound = false;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_IsThereAnActiveScheduleTest", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseAppID;
-                cmd.Parameters.Add("@testTypeId", SqlDbType.Int).Value = (int)testTypeID;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result != null && byte.TryParse(result.ToString(), out byte test))
-                    isFound = test > 0;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
+            bool isFound = await context.TestAppointments
+                        .Where(t => t.LocalDrivingLicense.LocalDrivingLicenseApplicationId == localLicenseAppID &&
+                        t.TestTypeId == testTypeID && !t.IsLocked)
+                        .AnyAsync(cancellationToken);
             return isFound;
         }
 
         public async Task<bool> DosePassTestTypeAsync(int localLicenseAppID, TestTypeEnum testTypeID, CancellationToken cancellationToken)
         {
-            bool isFound = false;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_DoesAttendTestType", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseAppID;
-                cmd.Parameters.Add("@testTypeId", SqlDbType.Int).Value = (int)testTypeID;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result != null && bool.TryParse(result.ToString(), out bool testResult))
-                    isFound = testResult;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return isFound;
+            bool isPass = await context.Tests
+                        .Where(t => t.TestAppointment.LocalDrivingLicense.LocalDrivingLicenseApplicationId == localLicenseAppID &&
+                        t.TestAppointment.TestTypeId == testTypeID)
+                        .OrderByDescending(t => t.TestAppointmentId)
+                        .Select(t => t.TestResult)
+                        .FirstOrDefaultAsync(cancellationToken);
+            return isPass;
         }
 
         public async Task<byte> GetPassedTestCountAsync(int localLicenseID, CancellationToken cancellationToken)
         {
-            byte PassedCount = 0;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand cmd = new SqlCommand("SP_GetPassedTestCount", connection);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("@localId", SqlDbType.Int).Value = localLicenseID;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result != null && byte.TryParse(result.ToString(), out byte count))
-                    PassedCount = count;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return PassedCount;
+            int total = await context.Tests
+                        .Where(t => t.TestAppointment.LocalDrivingLicenseId == localLicenseID && t.TestResult)
+                        .CountAsync(cancellationToken);
+            return (byte)total;
         }
     }
 }

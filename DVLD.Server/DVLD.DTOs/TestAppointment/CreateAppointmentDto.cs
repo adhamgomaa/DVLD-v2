@@ -20,16 +20,6 @@ namespace DVLD.DTOs.TestAppointment
         public decimal Fees { get; set; }
         [Required]
         public int UserId { get; set; }
-        public int RetakeApplicationId { get; set; }
-
-        public CreateAppointmentDto()
-        {
-            TestTypeId = TestTypeEnum.VisionTest;
-            LocalId = -1;
-            Date = DateTime.Now;
-            Fees = 0;
-            UserId = -1;
-            RetakeApplicationId = -1;
-        }
+        public int? RetakeApplicationId { get; set; }
     }
 }

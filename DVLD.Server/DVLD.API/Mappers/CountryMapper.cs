@@ -1,5 +1,5 @@
 ﻿using DVLD.DTOs.Countries;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {

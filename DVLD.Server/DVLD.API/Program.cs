@@ -4,14 +4,14 @@ using DVLD.Business.Interfaces;
 using DVLD.Business.Implementations;
 using DVLD.API.Interfaces;
 using DVLD.API.Implementations;
-using DVLD.DataAccess;
 using DVLD.API.Configuration;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
+using DVLD.DataAccess.Data;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,7 +44,8 @@ if (jwtSettings.AccessTokenMinutes <= 0 || jwtSettings.RefreshTokenDays <= 0)
 }
 
 builder.Services.AddSingleton(jwtSettings);
-builder.Services.AddSingleton(new DatabaseSettings(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Data access implementations
 builder.Services.AddScoped<IApplicationData, ApplicationData>();

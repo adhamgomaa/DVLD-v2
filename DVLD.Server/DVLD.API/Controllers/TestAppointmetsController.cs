@@ -1,9 +1,8 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.TestAppointment;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 using DVLD.Shared.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers
@@ -55,7 +54,6 @@ namespace DVLD.API.Controllers
         public async Task<ActionResult<int>> GetTrails(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             int trails = await service.GetTrialsAsync(localId, testTypeId, cancellationToken);
-           
             return Ok(trails);
         }
 
@@ -75,7 +73,6 @@ namespace DVLD.API.Controllers
         public async Task<ActionResult<bool>> AppointmentIsLock(int localId, TestTypeEnum testTypeId, CancellationToken cancellationToken)
         {
             bool result = await service.AppointmentIsLockAsync(localId, testTypeId, cancellationToken);
-           
             return Ok(result);
         }
 
@@ -91,7 +88,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Appointment" });
 
-            return CreatedAtRoute("GetAppointmentById", new { id = newApp.AppointmentId }, AppointmentMapper.ToGetDto(newApp));
+            return CreatedAtRoute("GetAppointmentById", new { id = newApp.TestAppointmentId }, AppointmentMapper.ToGetDto(newApp));
         }
 
         [HttpPut("{id}", Name = "UpdateAppointment")]
@@ -107,11 +104,11 @@ namespace DVLD.API.Controllers
             TestAppointment? test = await service.FindAppointmentAsync(id, cancellationToken);
             if (test == null) return NotFound($"There's no appointment with this Id: {id}");
 
-            test.Date = updateApp.Date;
-            test.Fees = updateApp.Fees;
+            test.AppointmentDate = updateApp.Date;
+            test.PaidFees = updateApp.Fees;
             test.IsLocked = updateApp.IsLocked;
-            test.LocalId = updateApp.LocalId;
-            test.UserId = updateApp.UserId;
+            test.LocalDrivingLicenseId = updateApp.LocalId;
+            test.CreatedByUserId = updateApp.UserId;
             test.TestTypeId = updateApp.TestTypeId;
 
             bool result = await service.UpdateAppointmentAsync(test, cancellationToken);

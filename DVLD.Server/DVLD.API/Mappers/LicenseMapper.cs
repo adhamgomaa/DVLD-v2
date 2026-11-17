@@ -1,6 +1,5 @@
 ﻿using DVLD.DTOs.Licenses;
-using DVLD.DTOs.LocalLicense;
-using DVLD.Shared.Entities;
+using DVLD.Shared.Models;
 
 namespace DVLD.API.Mappers
 {
@@ -10,16 +9,16 @@ namespace DVLD.API.Mappers
         {
             return new GetLicenseDto
             {
-                LicenseID = license.LicenseID,
-                AppID = license.AppID,
-                DriverID = license.DriverID,
-                ClassID = license.ClassID,
-                ExpiredDate = license.ExpiredDate,
+                LicenseID = license.LicenseId,
+                AppID = license.ApplicationId,
+                DriverID = license.DriverId,
+                ClassID = license.LicenseClassId,
+                ExpiredDate = license.ExpirationDate,
                 IsActive = license.IsActive,
                 IssueDate = license.IssueDate,
-                Fees = license.Fees,
+                Fees = license.PaidFees,
                 IssueReason = license.IssueReason,
-                UserID = license.UserID,
+                UserID = license.CreatedByUserId,
                 Notes = license.Notes
             };
         }
@@ -27,15 +26,15 @@ namespace DVLD.API.Mappers
         {
             return new License
             {
-                AppID = createLicense.AppID,
-                DriverID = createLicense.DriverID,
-                ClassID = createLicense.ClassID,
-                ExpiredDate = createLicense.ExpiredDate,
+                ApplicationId = createLicense.AppID,
+                DriverId = createLicense.DriverID,
+                LicenseClassId = createLicense.ClassID,
+                ExpirationDate = createLicense.ExpiredDate,
                 IsActive = createLicense.IsActive,
                 IssueReason = createLicense.IssueReason,
                 Notes = createLicense.Notes,
-                UserID = createLicense.UserID,
-                Fees = createLicense.Fees
+                CreatedByUserId = createLicense.UserID,
+                PaidFees = createLicense.Fees
             };
         }
 

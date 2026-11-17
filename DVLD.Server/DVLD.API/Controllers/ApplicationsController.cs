@@ -1,8 +1,7 @@
 using DVLD.Business.Interfaces;
 using DVLD.API.Mappers;
 using DVLD.DTOs.Applications;
-using DVLD.Shared.Entities;
-using Microsoft.AspNetCore.Http;
+using DVLD.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.API.Controllers
@@ -38,7 +37,7 @@ namespace DVLD.API.Controllers
             if (!result)
                 return StatusCode(500, new { message = "Error Adding Application" });
 
-            return CreatedAtRoute("GetApplicationById", new { id = newApp.AppID }, ApplicationMapper.ToGetDto(newApp));
+            return CreatedAtRoute("GetApplicationById", new { id = newApp.ApplicationId }, ApplicationMapper.ToGetDto(newApp));
         }
 
         [HttpPut("{id}", Name = "UpdateApp")]
@@ -54,12 +53,12 @@ namespace DVLD.API.Controllers
             Application? app = await service.FindAppAsync(id, cancellationToken);
             if (app == null) return NotFound($"There's no application with this Id: {id}");
 
-            app.PersonId = updateApp.PersonId;
-            app.AppStatus = updateApp.AppStatus;
-            app.Type = updateApp.Type;
-            app.StatusDate = updateApp.StatusDate;
-            app.Fees = updateApp.Fees;
-            app.UserId = updateApp.UserId;
+            app.ApplicantPersonId = updateApp.PersonId;
+            app.ApplicationStatus = updateApp.AppStatus;
+            app.ApplicationTypeId = updateApp.Type;
+            app.LastStatusDate = updateApp.StatusDate;
+            app.PaidFees = updateApp.Fees;
+            app.CreatedByUserId = updateApp.UserId;
 
             bool result = await service.UpdateAppAsync(app, cancellationToken);
             if (result) return Ok(updateApp);

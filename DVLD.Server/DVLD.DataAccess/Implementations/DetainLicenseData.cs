@@ -1,199 +1,107 @@
+using DVLD.DataAccess.Data;
 using DVLD.DataAccess.Interfaces;
-using DVLD.Shared.Entities;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
+using DVLD.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DVLD.DataAccess.Implementations
 {
-    public sealed class DetainLicenseData(DatabaseSettings databaseSettings) : IDetainLicenseData
+    public sealed class DetainLicenseData(AppDbContext context) : IDetainLicenseData
     {
-        private static DetainLicense MapDetain(SqlDataReader reader)
+        public async Task<int> AddNewDetainAsync(DetainedLicense newDetain, CancellationToken cancellationToken)
         {
-            return new DetainLicense
-                (
-                    reader.GetInt32(reader.GetOrdinal("DetainID")),
-                    reader.GetInt32(reader.GetOrdinal("LicenseID")),
-                    reader.GetDateTime(reader.GetOrdinal("DetainDate")),
-                    reader.GetDecimal(reader.GetOrdinal("DetainFees")),
-                    reader.GetInt32(reader.GetOrdinal("CreatedByUserID")),
-                    reader.GetBoolean(reader.GetOrdinal("IsReleased")),
-
-                    reader.IsDBNull(reader.GetOrdinal("ReleaseDate"))
-                    ? DateTime.Now
-                    : reader.GetDateTime(reader.GetOrdinal("ReleaseDate")),
-
-                    reader.IsDBNull(reader.GetOrdinal("ReleasedByUserID"))
-                    ? -1
-                    : reader.GetInt32(reader.GetOrdinal("ReleasedByUserID")),
-
-                    reader.IsDBNull(reader.GetOrdinal("ReleaseApplicationID"))
-                    ? -1
-                    : reader.GetInt32(reader.GetOrdinal("ReleaseApplicationID"))
-                );
+            context.DetainedLicenses.Add(newDetain);
+            await context.SaveChangesAsync(cancellationToken);
+            return newDetain.DetainId;
         }
-        public async Task<int> AddNewDetainAsync(DetainLicense newDetain, CancellationToken cancellationToken)
+
+        public async Task<bool> UpdateDetainLicenseAsync(DetainedLicense updateDetain, CancellationToken cancellationToken)
         {
-            int DetainId = -1;
+            var detain = await context.DetainedLicenses.FindAsync([updateDetain.DetainId], cancellationToken);
+            if(detain is null)
+                return false;
+            detain.CreatedByUserId = updateDetain.CreatedByUserId;
+            detain.DetainDate = updateDetain.DetainDate;
+            detain.DetainFees = updateDetain.DetainFees;
+            detain.IsReleased = updateDetain.IsReleased;
+            detain.LicenseId = updateDetain.LicenseId;
+            detain.ReleaseApplicationId = updateDetain.ReleaseApplicationId;
+            detain.ReleaseDate = updateDetain.ReleaseDate;
+            detain.ReleasedByUserId = updateDetain.ReleasedByUserId;
+            
+            return await context.SaveChangesAsync(cancellationToken) > 0;
+        }
+
+        public async Task<DetainedLicense?> FindLicenseAsync(int licenseId, CancellationToken cancellationToken)
+        {
+            var detain = await context.DetainedLicenses.AsNoTracking()
+                            .OrderByDescending(d => d.DetainId)
+                            .FirstOrDefaultAsync(d => d.LicenseId == licenseId, cancellationToken);
+            return detain;
+        }
+
+        public async Task<DetainedLicense?> FindDetainLicenseByDetainIdAsync(int detainId, CancellationToken cancellationToken)
+        {
+            var detain = await context.DetainedLicenses.FindAsync([detainId], cancellationToken);
+            return detain;
+        }
+
+        public async Task<List<DetainedLicenseInfo>> GetDetainedLicensesAsync(CancellationToken cancellationToken)
+        {
+            var detains = await context.DetainedLicenses.AsNoTracking()
+                                .Select(d => new DetainedLicenseInfo
+                                {
+                                    DetainId = d.DetainId,
+                                    LicenseId = d.LicenseId,
+                                    DetainDate = d.DetainDate,
+                                    IsReleased = d.IsReleased,
+                                    DetainFees = d.DetainFees,
+                                    ReleaseDate = d.ReleaseDate,
+                                    NationalNo = d.License.Driver.Person.NationalNo,
+                                    FullName = d.License.Driver.Person.FirstName + " " + d.License.Driver.Person.SecondName + " " + d.License.Driver.Person.ThirdName + " " + d.License.Driver.Person.LastName,
+                                    ReleaseApplicationId = d.ReleaseApplicationId
+                                }).ToListAsync(cancellationToken);
+            return detains;
+        }
+
+        public async Task<int> ReleaseDetainedLicenseAsync(DetainedLicense releaseLicense, CancellationToken cancellationToken)
+        {
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_AddNewDetain", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@licenseId", SqlDbType.Int).Value = newDetain.LicenseID;
-                command.Parameters.Add("@detainFees", SqlDbType.Decimal).Value = newDetain.Fees;
-                command.Parameters.Add("@userId", SqlDbType.Int).Value = newDetain.UserID;
-                SqlParameter outputId = new SqlParameter("@detainId", SqlDbType.Int)
+                var detain = await context.DetainedLicenses.FindAsync([releaseLicense.DetainId], cancellationToken);
+                if(detain is null)
+                    return -1;
+
+                detain.ReleaseApplication = new Application
                 {
-                    Direction = ParameterDirection.Output
+                    ApplicantPersonId = releaseLicense.ReleaseApplication!.ApplicantPersonId,
+                    ApplicationTypeId = releaseLicense.ReleaseApplication.ApplicationTypeId,
+                    ApplicationStatus = releaseLicense.ReleaseApplication.ApplicationStatus,
+                    LastStatusDate = releaseLicense.ReleaseApplication.LastStatusDate,
+                    PaidFees = releaseLicense.ReleaseApplication.PaidFees,
+                    CreatedByUserId = (int)releaseLicense.ReleasedByUserId!,
                 };
-                command.Parameters.Add(outputId);
-                await connection.OpenAsync(cancellationToken);
-                await command.ExecuteNonQueryAsync(cancellationToken);
-                DetainId = outputId.Value == DBNull.Value ? -1 : (int)outputId.Value;
-            }
-            catch (SqlException)
-            {
-                DetainId = -1;
-            }
-            return DetainId;
-        }
 
-        public async Task<bool> UpdateDetainLicenseAsync(DetainLicense updateDetain, CancellationToken cancellationToken)
-        {
-            int rowAffected = 0;
-            try
+                detain.IsReleased = releaseLicense.IsReleased;
+                detain.ReleaseDate = releaseLicense.ReleaseDate;
+                detain.ReleasedByUserId = releaseLicense.ReleasedByUserId;
+                await context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                releaseLicense.ReleaseApplicationId = (int)detain.ReleaseApplicationId!;
+                return (int)detain.ReleaseApplicationId!;
+            } catch
             {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_UpdateDetainLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@licenseId", SqlDbType.Int).Value = updateDetain.LicenseID;
-                command.Parameters.Add("@detainFees", SqlDbType.Decimal).Value = updateDetain.Fees;
-                command.Parameters.Add("@userId", SqlDbType.Int).Value = updateDetain.UserID;
-                command.Parameters.Add("@detainDate", SqlDbType.DateTime).Value = updateDetain.DetainDate;
-                command.Parameters.Add("@detainId", SqlDbType.Int).Value = updateDetain.DetainID;
-                await connection.OpenAsync(cancellationToken);
-                rowAffected = await command.ExecuteNonQueryAsync(cancellationToken);
+                await transaction.RollbackAsync(cancellationToken);
+                return -1;
             }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return rowAffected > 0;
-        }
-
-        public async Task<DetainLicense?> FindLicenseAsync(int licenseId, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_FindDetainedLicenseByLicenseId", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@licenseId", SqlDbType.Int).Value = licenseId;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                if (!await reader.ReadAsync(cancellationToken))
-                    return null;
-                return MapDetain(reader);
-            }
-            catch (SqlException)
-            {
-                return null;
-            }
-        }
-
-        public async Task<List<DetainLicenseInfo>> GetDetainedLicensesAsync(CancellationToken cancellationToken)
-        {
-            List<DetainLicenseInfo> list = new List<DetainLicenseInfo>();
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_GetAllDetainedLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                await connection.OpenAsync(cancellationToken);
-                await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    list.Add(new DetainLicenseInfo
-                        (
-                            reader.GetInt32(reader.GetOrdinal("D.ID")),
-                            reader.GetInt32(reader.GetOrdinal("L.ID")),
-                            reader.GetDateTime(reader.GetOrdinal("D.Date")),
-                            reader.GetBoolean(reader.GetOrdinal("Is Released")),
-                            reader.GetDecimal(reader.GetOrdinal("Fine Fees")),
-                            reader.IsDBNull(reader.GetOrdinal("Release Date"))
-                                ? DateTime.Now
-                                : reader.GetDateTime(reader.GetOrdinal("Release Date")),
-                            reader.GetString(reader.GetOrdinal("National No.")),
-                            reader.GetString(reader.GetOrdinal("Full Name")),
-                            reader.IsDBNull(reader.GetOrdinal("Release App.ID"))
-                                ? -1
-                                : reader.GetInt32(reader.GetOrdinal("Release App.ID"))
-                        ));
-                }
-                    
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return list;
-        }
-
-        public async Task<int> ReleaseDetainedLicenseAsync(DetainLicense releaseLicense, CancellationToken cancellationToken)
-        {
-            int releaseAppId = 0;
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_ReleaseDetainedLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@personId", SqlDbType.Int).Value = releaseLicense.PersonId;
-                command.Parameters.Add("@appType", SqlDbType.Int).Value = (int)releaseLicense.Type;
-                command.Parameters.Add("@status", SqlDbType.TinyInt).Value = (byte)releaseLicense.AppStatus;
-                command.Parameters.Add("@statusDate", SqlDbType.DateTime).Value = releaseLicense.StatusDate;
-                command.Parameters.Add("@fees", SqlDbType.Decimal).Value = releaseLicense.Fees;
-                command.Parameters.Add("@releaseUserId", SqlDbType.Int).Value = releaseLicense.ReleaseByUserId;
-                command.Parameters.Add("@detainId", SqlDbType.Int).Value = releaseLicense.DetainID;
-                SqlParameter outputId = new SqlParameter("@releaseAppId", SqlDbType.Int)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(outputId);
-                await connection.OpenAsync(cancellationToken);
-                await command.ExecuteNonQueryAsync(cancellationToken);
-                releaseAppId = outputId.Value == DBNull.Value ? -1 : (int)outputId.Value;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            return releaseAppId;
         }
 
         public async Task<bool> IsDetainedLicenseAsync(int licenseId, CancellationToken cancellationToken)
         {
-            try
-            {
-                await using SqlConnection connection = new SqlConnection(databaseSettings.ConnectionString);
-                await using SqlCommand command = new SqlCommand("SP_IsDetainedLicense", connection);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@licenseId", SqlDbType.Int).Value = licenseId;
-                await connection.OpenAsync(cancellationToken);
-                object? result = await command.ExecuteScalarAsync(cancellationToken);
-                if (result != null)
-                    return true;
-                return false;
-            }
-            catch (SqlException)
-            {
-                return false;
-            }
+            bool isDetained = await context.DetainedLicenses.AsNoTracking()
+                                    .AnyAsync(d => d.LicenseId == licenseId && d.IsReleased == false, cancellationToken);
+            return isDetained;
         }
     }
 }
