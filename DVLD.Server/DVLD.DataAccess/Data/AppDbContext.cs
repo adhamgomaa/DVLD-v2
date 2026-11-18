@@ -335,8 +335,6 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options) : DbCo
 
             entity.HasIndex(e => e.NationalNo, "IX_People_NationalNumber");
 
-            entity.HasIndex(e => e.NationalNo, "UQ_NationalNo").IsUnique();
-
             entity.HasIndex(e => e.Email, "UQ_People_Email").IsUnique();
 
             entity.HasIndex(e => e.NationalNo, "UQ_People_NationalNumber").IsUnique();
